@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Poker Coach">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1F5B45">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Poker Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0EA; --surface:#FFFFFF; --ink:#16241D; --muted:#5A6A61; --line:#D3DBD4;
+  --felt:#1F5B45; --felt2:#16483A; --feltInk:#EAF3EC; --brass:#A9761F; --brassInk:#FFFFFF;
+  --good:#257047; --goodBg:#E1F0E6; --bad:#A93A2A; --badBg:#F7E3DF; --warnBg:#F6EBD3;
+  --red:#C0302A; --blue:#1F5FB0; --green:#1E7A3C; --cardBg:#FFFDF7; --cardInk:#1A1A1A;
+  --serif:"Fraunces", Georgia, "Times New Roman", serif;
+  --sans:"Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --cw:clamp(36px, 10.4vw, 58px);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1813; --surface:#15231C; --ink:#E5ECE6; --muted:#97A89E; --line:#27382F;
+    --felt:#174B39; --felt2:#103A2C; --brass:#D2A04A; --brassInk:#1A1405;
+    --good:#6CC28E; --goodBg:#163626; --bad:#EE8A79; --badBg:#3A1C17; --warnBg:#3A3018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1813; --surface:#15231C; --ink:#E5ECE6; --muted:#97A89E; --line:#27382F;
+  --felt:#174B39; --felt2:#103A2C; --brass:#D2A04A; --brassInk:#1A1405;
+  --good:#6CC28E; --goodBg:#163626; --bad:#EE8A79; --badBg:#3A1C17; --warnBg:#3A3018;
+  color-scheme:dark;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 60px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+#app{max-width:560px;margin:0 auto;min-height:100%}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px;border-radius:6px}
+h1,h2,h3{font-family:var(--serif);font-weight:700;letter-spacing:-.01em;margin:0}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:14px 18px 10px;display:flex;align-items:center;gap:12px}
+.top h1{font-size:1.6rem}
+.top.sub{padding:10px 12px}
+.back{background:none;border:0;padding:8px 8px;font-weight:600;color:var(--felt);cursor:pointer;min-height:44px}
+:root:not([data-theme="light"]) .back{color:var(--brass)}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .back{color:var(--felt)}}
+.quizhead .qt{font-weight:600;flex:1}
+.quizhead .qn{color:var(--muted);font-variant-numeric:tabular-nums;padding-right:8px}
+.prog{height:3px;background:var(--line);margin:0 18px}
+.prog i{display:block;height:100%;background:var(--brass);transition:width .3s}
+.main{padding:8px 18px calc(96px + env(safe-area-inset-bottom,0px))}
+.r-quiz .main,.r-lesson .main,.r-results .main{padding-bottom:40px}
+
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{flex:1;max-width:112px;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;font-size:.72rem;color:var(--muted);cursor:pointer;min-height:48px}
+.tabs .ti{font-size:1.35rem;line-height:1.1;font-family:var(--serif)}
+.tabs .ti.learn{color:var(--red)} .four .tabs .ti.practice{color:var(--blue)} .tabs .ti.practice{color:var(--red)} .four .tabs .ti.progress{color:var(--green)}
+.tabs button.on{color:var(--ink);font-weight:600}
+.tabs button:not(.on) .ti{opacity:.55}
+
+/* felt + cards: the one bold element */
+.felt{background:radial-gradient(120% 90% at 50% 0%, var(--felt) 0%, var(--felt2) 100%);color:var(--feltInk);border-radius:22px;padding:14px 12px 16px;display:flex;flex-wrap:wrap;gap:12px 16px;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06), inset 0 2px 18px rgba(0,0,0,.25)}
+.grp{display:flex;flex-direction:column;align-items:center;gap:6px}
+.glabel{font-size:.78rem;color:rgba(234,243,236,.78);font-weight:500}
+.crow{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.prose .crow,.set .crow{margin:10px 0 12px;justify-content:flex-start}
+.card{width:var(--cw);aspect-ratio:5/7;border-radius:calc(var(--cw)*.12);background:var(--cardBg);color:var(--cardInk);position:relative;border:1px solid rgba(0,0,0,.14);box-shadow:0 1px 0 rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.18);font-family:var(--serif);padding:0;flex:none;user-select:none;-webkit-user-select:none}
+.card .ix{position:absolute;top:6%;left:9%;display:flex;flex-direction:column;align-items:center;line-height:.95}
+.card .ix b{font-size:calc(var(--cw)*.36);font-weight:700;letter-spacing:-.04em}
+.card .ix i{font-style:normal;font-size:calc(var(--cw)*.27)}
+.card .pip{position:absolute;right:9%;bottom:5%;font-size:calc(var(--cw)*.5);line-height:1}
+.card.s1,.card.s2,.mc.s1,.mc.s2{color:var(--red)}
+.four .card.s2,.four .mc.s2{color:var(--blue)} .four .card.s3,.four .mc.s3{color:var(--green)}
+button.card{cursor:pointer;transition:transform .15s}
+.card.sel{transform:translateY(-8px);box-shadow:0 0 0 3px var(--brass),0 8px 14px rgba(0,0,0,.3)}
+.card.best{box-shadow:0 0 0 3px #7FD39B,0 4px 10px rgba(0,0,0,.3)}
+.card.wrong{box-shadow:0 0 0 3px #F08C7A}
+.card.dim{opacity:.45}
+.deal{animation:deal .32s cubic-bezier(.2,.7,.3,1) backwards;animation-delay:calc(var(--k,0)*45ms)}
+@keyframes deal{from{opacity:0;transform:translateY(-14px) rotate(-4deg)}}
+@media (prefers-reduced-motion: reduce){.deal{animation:none}.prog i{transition:none}}
+.mc{display:inline-block;font-family:var(--serif);font-weight:700;background:var(--cardBg);color:var(--cardInk);border:1px solid var(--line);border-radius:5px;padding:0 4px;font-size:.9em;line-height:1.35;margin:1px 0;white-space:nowrap}
+
+/* hero */
+.hero{flex-direction:column;align-items:flex-start;padding:22px 20px 24px;margin-top:4px}
+.hero .fan{justify-content:flex-start;margin-bottom:18px}
+.hero .fan .card:nth-child(n){transform:rotate(calc((var(--k) - 2) * 3deg)) translateY(calc(var(--k) * 0px))}
+.hero h2{font-size:1.75rem;line-height:1.12;max-width:16ch;color:#fff}
+.hero p{margin:10px 0 0;color:rgba(234,243,236,.85);max-width:34ch}
+
+/* blocks */
+.stack{display:flex;flex-direction:column;gap:10px;margin:18px 0}
+.btn{min-height:50px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-weight:600;padding:12px 18px;cursor:pointer}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--brassInk)}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:40px;padding:8px 14px;font-size:.92rem;align-self:flex-start}
+.tile{display:grid;gap:2px;text-align:left;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--felt);border-radius:16px;cursor:pointer}
+.tile.warn{border-left-color:var(--brass);background:linear-gradient(var(--warnBg),var(--warnBg)) padding-box}
+.tile:disabled{opacity:.55;cursor:default}
+.tk{font-size:.85rem;color:var(--muted)} .tt{font-family:var(--serif);font-size:1.18rem;font-weight:700;line-height:1.25} .ts{font-size:.88rem;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center}
+.stats b{display:block;font-family:var(--serif);font-size:1.35rem;font-variant-numeric:tabular-nums}
+.stats span{font-size:.8rem;color:var(--muted)}
+.sub{color:var(--muted);font-size:.92rem;margin:4px 0}
+.center{text-align:center}
+.fine{color:var(--muted);font-size:.8rem;text-align:center;margin:22px 8px}
+.empty{color:var(--muted)}
+.linkish{background:none;border:0;padding:0;color:var(--felt);text-decoration:underline;font-weight:600;cursor:pointer}
+
+/* learn */
+.level{margin:8px 0 22px}
+.level h2,.sec{display:flex;align-items:center;gap:10px;font-size:1.2rem;margin:18px 0 10px}
+.lvn{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--felt);color:#fff;font-size:.95rem;flex:none}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:14px 16px;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;min-height:56px;cursor:pointer;width:100%}
+.li:last-child{border-bottom:0}
+.li:disabled{cursor:default;color:var(--muted)}
+.lid{font-family:var(--serif);font-weight:700;color:var(--muted);min-width:2.2em;font-variant-numeric:tabular-nums}
+.lt{flex:1;display:flex;flex-direction:column;line-height:1.3}
+.lt small{color:var(--muted);font-size:.8rem;margin-top:2px}
+.pill{font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--line);color:var(--ink)}
+.pill.m1{background:var(--badBg);color:var(--bad)} .pill.m2{background:var(--warnBg);color:var(--ink)} .pill.m3{background:var(--goodBg);color:var(--good)} .pill.m4{background:var(--felt);color:#fff} .pill.lock{background:transparent;color:var(--muted);border:1px solid var(--line)}
+
+/* lesson */
+.kick{color:var(--muted);margin:6px 0 2px;font-size:.9rem}
+.lh{font-size:1.9rem;line-height:1.15;margin-bottom:8px}
+.prose{font-size:1.02rem;line-height:1.6;max-width:62ch}
+.prose p{margin:10px 0}
+.prose .note,.note{color:var(--muted);font-size:.9rem;margin-top:-4px}
+.hands{padding-left:1.4em;margin:8px 0}
+.hands li{margin-bottom:12px}
+.hands .crow{margin:6px 0 0;--cw:clamp(30px,8.6vw,44px)}
+
+/* quiz */
+.qmeta{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem;margin:10px 2px}
+.prompt{font-size:1.12rem;line-height:1.45;margin:16px 2px 14px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;min-height:52px;cursor:pointer;line-height:1.35}
+.opt:not(:disabled):active{transform:scale(.99)}
+.opt.right{border-color:var(--good);background:var(--goodBg);font-weight:600}
+.opt.wrongo{border-color:var(--bad);background:var(--badBg)}
+.opt.chosen{border-color:var(--brass);font-weight:600}
+.opt.fade{opacity:.55}
+.pickbar{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 16px}
+.coach{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-top:5px solid var(--good);border-radius:16px;padding:16px}
+.coach.no{border-top-color:var(--bad)}
+.coach h2{font-size:1.35rem;color:var(--good)} .coach.no h2{color:var(--bad)}
+.ans{margin:8px 0}
+.why{line-height:1.55}
+.obd{margin:6px 0;line-height:1.9}
+.cbox{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
+.cbox h3{font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--muted)}
+.cbox p{margin:4px 0 0}
+.fu summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.fu summary::-webkit-details-marker{display:none}
+.reveal{color:var(--felt);font-weight:600;font-size:.9rem}
+.fu[open] .reveal{display:none}
+
+/* progress */
+.card-d{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0}
+.card-d summary{cursor:pointer;font-weight:600;display:flex;justify-content:space-between;gap:10px}
+.card-d summary small{color:var(--muted);font-weight:400}
+.arow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.arow:last-child{border-bottom:0}
+.arow span:first-child{flex:1}
+.arow b{font-variant-numeric:tabular-nums}
+.skills{display:flex;flex-direction:column;gap:8px}
+.skill{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sk{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:12px 14px;text-align:left;cursor:pointer}
+.bar{height:4px;background:var(--line)} .bar i{display:block;height:100%;background:var(--felt)}
+:root[data-theme="dark"] .bar i{background:var(--brass)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .bar i{background:var(--brass)}}
+.skd{padding:4px 14px 14px;font-size:.94rem}
+.skd ul{margin:4px 0 8px;padding-left:1.2em}
+.mist p{margin:8px 0}
+.mg{margin:4px 0}
+.mg small{color:var(--muted)}
+.good{color:var(--good);font-weight:600} .bad{color:var(--bad);font-weight:600}
+.rh{font-size:3.4rem;text-align:center;margin-top:18px;font-variant-numeric:tabular-nums}
+
+/* settings */
+.set{margin:8px 0 24px}
+.set h2{font-size:1.15rem;margin-bottom:8px}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px 4px;min-height:42px;font-size:.9rem;cursor:pointer}
+.seg button.on{background:var(--felt);color:#fff;font-weight:600}
+.set .btn{width:100%;margin-top:10px}
+
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;z-index:20;max-width:90vw}
+@media (min-width:600px){.hero h2{font-size:2.1rem}.main{padding-left:24px;padding-right:24px}}
+</style>
+</head>
+<body>
+<div id="app"><p style="padding:40px;text-align:center">Loading Poker Coach…</p></div>
+<script>
+// ===== Poker Coach engine: deck, evaluator, probability =====
+// Card = integer 0..51. rank = (c % 13) + 2 (2..14, 14 = Ace). suit = floor(c / 13): 0♠ 1♥ 2♦ 3♣
+const Engine = (() => {
+  const RANK_CH = { 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+  const RANK_NAME = { 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine', 10: 'Ten', 11: 'Jack', 12: 'Queen', 13: 'King', 14: 'Ace' };
+  const RANK_PLURAL = { 2: 'Twos', 3: 'Threes', 4: 'Fours', 5: 'Fives', 6: 'Sixes', 7: 'Sevens', 8: 'Eights', 9: 'Nines', 10: 'Tens', 11: 'Jacks', 12: 'Queens', 13: 'Kings', 14: 'Aces' };
+  const SUIT_CH = ['♠', '♥', '♦', '♣'];
+  const SUIT_NAME = ['spades', 'hearts', 'diamonds', 'clubs'];
+  const CAT = { HIGH: 0, PAIR: 1, TWO_PAIR: 2, TRIPS: 3, STRAIGHT: 4, FLUSH: 5, FULL_HOUSE: 6, QUADS: 7, STRAIGHT_FLUSH: 8 };
+  const CAT_NAME = ['High card', 'One pair', 'Two pair', 'Three of a kind', 'Straight', 'Flush', 'Full house', 'Four of a kind', 'Straight flush'];
+
+  const rankOf = c => (c % 13) + 2;
+  const suitOf = c => Math.floor(c / 13);
+  const card = (r, s) => s * 13 + (r - 2);
+  const label = c => RANK_CH[rankOf(c)] + SUIT_CH[suitOf(c)];
+
+  // ---- randomness: crypto when available ----
+  function randInt(n) {
+    if (n <= 0) throw new Error('randInt n<=0');
+    const g = (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) ? globalThis.crypto : null;
+    if (g) {
+      const lim = Math.floor(0x100000000 / n) * n; const a = new Uint32Array(1);
+      do { g.getRandomValues(a); } while (a[0] >= lim);
+      return a[0] % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+  const pick = arr => arr[randInt(arr.length)];
+  function shuffle(arr) { // Fisher–Yates, in place
+    for (let i = arr.length - 1; i > 0; i--) { const j = randInt(i + 1); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    return arr;
+  }
+
+  class Deck {
+    constructor(exclude = []) {
+      const ex = new Set(exclude);
+      this.cards = shuffle([...Array(52).keys()].filter(c => !ex.has(c)));
+      this.dealt = new Set(exclude);
+    }
+    deal(n = 1) {
+      if (n > this.cards.length) throw new Error('Deck exhausted');
+      const out = this.cards.splice(0, n);
+      for (const c of out) { if (this.dealt.has(c)) throw new Error('Duplicate card dealt'); this.dealt.add(c); }
+      return out;
+    }
+    remove(cs) { for (const c of cs) { const i = this.cards.indexOf(c); if (i < 0) throw new Error('Card not in deck'); this.cards.splice(i, 1); this.dealt.add(c); } }
+    get size() { return this.cards.length; }
+  }
+
+  // ---- 5-card evaluator: returns integer score; higher wins ----
+  function eval5(cs) {
+    const rs = cs.map(rankOf), ss = cs.map(suitOf);
+    const cnt = {};
+    for (const r of rs) cnt[r] = (cnt[r] || 0) + 1;
+    const groups = Object.keys(cnt).map(Number).map(r => [cnt[r], r]).sort((a, b) => b[0] - a[0] || b[1] - a[1]);
+    const flush = ss.every(s => s === ss[0]);
+    const uniq = groups.map(g => g[1]).sort((a, b) => b - a);
+    let straightHigh = 0;
+    if (uniq.length === 5) {
+      if (uniq[0] - uniq[4] === 4) straightHigh = uniq[0];
+      else if (uniq[0] === 14 && uniq[1] === 5 && uniq[4] === 2) straightHigh = 5; // wheel A-2-3-4-5
+    }
+    let cat, tb;
+    if (straightHigh && flush) { cat = CAT.STRAIGHT_FLUSH; tb = [straightHigh]; }
+    else if (groups[0][0] === 4) { cat = CAT.QUADS; tb = [groups[0][1], groups[1][1]]; }
+    else if (groups[0][0] === 3 && groups[1][0] === 2) { cat = CAT.FULL_HOUSE; tb = [groups[0][1], groups[1][1]]; }
+    else if (flush) { cat = CAT.FLUSH; tb = uniq; }
+    else if (straightHigh) { cat = CAT.STRAIGHT; tb = [straightHigh]; }
+    else if (groups[0][0] === 3) { cat = CAT.TRIPS; tb = groups.map(g => g[1]); }
+    else if (groups[0][0] === 2 && groups[1][0] === 2) { cat = CAT.TWO_PAIR; tb = groups.map(g => g[1]); }
+    else if (groups[0][0] === 2) { cat = CAT.PAIR; tb = groups.map(g => g[1]); }
+    else { cat = CAT.HIGH; tb = uniq; }
+    let score = cat;
+    for (let i = 0; i < 5; i++) score = score * 16 + (tb[i] || 0);
+    return score;
+  }
+  const catOf = score => Math.floor(score / 1048576); // 16^5
+  const tbOf = score => { const out = []; let s = score % 1048576; for (let i = 4; i >= 0; i--) { out[i] = s % 16; s = Math.floor(s / 16); } return out; };
+
+  function combos(arr, k) {
+    const out = []; const n = arr.length; const idx = [];
+    (function rec(start, depth) {
+      if (depth === k) { out.push(idx.map(i => arr[i])); return; }
+      for (let i = start; i <= n - (k - depth); i++) { idx[depth] = i; rec(i + 1, depth + 1); }
+    })(0, 0);
+    return out;
+  }
+  // best 5 of N (N>=5)
+  function best(cs) {
+    if (cs.length < 5) throw new Error('need 5+ cards');
+    if (new Set(cs).size !== cs.length) throw new Error('duplicate cards in hand');
+    let bestScore = -1, bestCards = null;
+    for (const c5 of combos(cs, 5)) { const s = eval5(c5); if (s > bestScore) { bestScore = s; bestCards = c5; } }
+    return { score: bestScore, cards: bestCards, cat: catOf(bestScore) };
+  }
+  const bestScore = cs => best(cs).score;
+
+  function describe(score) {
+    const cat = catOf(score), t = tbOf(score);
+    switch (cat) {
+      case CAT.STRAIGHT_FLUSH: return t[0] === 14 ? 'Royal flush' : `Straight flush, ${RANK_NAME[t[0]]} high`;
+      case CAT.QUADS: return `Four of a kind, ${RANK_PLURAL[t[0]]}`;
+      case CAT.FULL_HOUSE: return `Full house, ${RANK_PLURAL[t[0]]} full of ${RANK_PLURAL[t[1]]}`;
+      case CAT.FLUSH: return `Flush, ${RANK_NAME[t[0]]} high`;
+      case CAT.STRAIGHT: return `Straight, ${RANK_NAME[t[0]]} high`;
+      case CAT.TRIPS: return `Three of a kind, ${RANK_PLURAL[t[0]]}`;
+      case CAT.TWO_PAIR: return `Two pair, ${RANK_PLURAL[t[0]]} and ${RANK_PLURAL[t[1]]}`;
+      case CAT.PAIR: return `Pair of ${RANK_PLURAL[t[0]]}`;
+      default: return `${RANK_NAME[t[0]]} high`;
+    }
+  }
+  // Description with kickers, for explanations
+  function describeFull(score) {
+    const cat = catOf(score), t = tbOf(score);
+    const k = arr => arr.filter(Boolean).map(r => RANK_CH[r]).join('-');
+    if (cat === CAT.PAIR) return `${describe(score)} (kickers ${k(t.slice(1, 4))})`;
+    if (cat === CAT.TWO_PAIR) return `${describe(score)} (kicker ${k(t.slice(2, 3))})`;
+    if (cat === CAT.TRIPS) return `${describe(score)} (kickers ${k(t.slice(1, 3))})`;
+    if (cat === CAT.QUADS) return `${describe(score)} (kicker ${k(t.slice(1, 2))})`;
+    if (cat === CAT.HIGH || cat === CAT.FLUSH) return `${describe(score)} (${k(t)})`;
+    return describe(score);
+  }
+
+  function nCr(n, r) { if (r < 0 || r > n) return 0; r = Math.min(r, n - r); let x = 1; for (let i = 1; i <= r; i++) x = x * (n - r + i) / i; return Math.round(x); }
+
+  const unseenFrom = known => { const k = new Set(known); return [...Array(52).keys()].filter(c => !k.has(c)); };
+
+  // Cards that bring hole+board to at least target category (when currently below it)
+  function outs(hole, board, targetCat) {
+    const known = hole.concat(board);
+    return unseenFrom(known).filter(c => best(known.concat([c])).cat >= targetCat);
+  }
+
+  // Exact equity hero vs villain (known hands), board 3..5 cards
+  function equity(hero, villain, board) {
+    const rem = unseenFrom(hero.concat(villain, board));
+    const need = 5 - board.length;
+    let win = 0, tie = 0, total = 0;
+    const runouts = need === 0 ? [[]] : combos(rem, need);
+    for (const ro of runouts) {
+      const b = board.concat(ro);
+      const h = bestScore(hero.concat(b)), v = bestScore(villain.concat(b));
+      if (h > v) win++; else if (h === v) tie++;
+      total++;
+    }
+    return { win, tie, lose: total - win - tie, total, eq: (win + tie / 2) / total };
+  }
+
+  // Hero (2 cards) vs every possible opponent 2-card hand on a complete 5-card board
+  function vsAllHands(hero, board) {
+    const rem = unseenFrom(hero.concat(board));
+    const h = bestScore(hero.concat(board));
+    let beat = 0, tie = 0, lose = 0;
+    for (const v of combos(rem, 2)) { const s = bestScore(v.concat(board)); if (s > h) beat++; else if (s === h) tie++; else lose++; }
+    return { beat, tie, lose, total: beat + tie + lose, heroScore: h };
+  }
+
+  // The best possible hand on a board (the nuts), plus distinct hand list
+  function nutsList(board, exclude = []) {
+    const rem = unseenFrom(board.concat(exclude));
+    const map = new Map();
+    for (const v of combos(rem, 2)) {
+      const s = bestScore(v.concat(board)); const d = describe(s);
+      if (!map.has(d) || map.get(d).score < s) map.set(d, { score: s, example: v });
+    }
+    return [...map.entries()].map(([d, o]) => ({ desc: d, score: o.score, example: o.example })).sort((a, b) => b.score - a.score);
+  }
+
+  // Probability that at least one out arrives in `draws` cards from `unseen`
+  function hitProb(outsN, unseen, draws) {
+    if (draws === 1) return outsN / unseen;
+    return 1 - nCr(unseen - outsN, draws) / nCr(unseen, draws);
+  }
+
+  return { RANK_CH, RANK_NAME, RANK_PLURAL, SUIT_CH, SUIT_NAME, CAT, CAT_NAME, rankOf, suitOf, card, label, randInt, pick, shuffle, Deck, eval5, catOf, tbOf, combos, best, bestScore, describe, describeFull, nCr, unseenFrom, outs, equity, vsAllHands, nutsList, hitProb };
+})();
+if (typeof module !== 'undefined') module.exports = Engine;
+
+// ===== Curriculum: topics, coach notes, question generators, lessons =====
+const Curriculum = ((E) => {
+  const { CAT, CAT_NAME, RANK_NAME, RANK_PLURAL, RANK_CH, SUIT_NAME, SUIT_CH, rankOf, suitOf, card, randInt, pick, shuffle, Deck } = E;
+
+  // ---------- helpers ----------
+  const mini = cs => cs.map(c => `<span class="mc s${suitOf(c)}">${E.label(c)}</span>`).join(' ');
+  const pct = (x, d = 1) => (x * 100).toFixed(d).replace(/\.0$/, '') + '%';
+  const sample = (arr, k) => shuffle(arr.slice()).slice(0, k);
+  function mc(correct, distractors, n = 4) {
+    const seen = new Set([correct]); const ds = [];
+    for (const d of shuffle(distractors.slice())) { if (!seen.has(d)) { seen.add(d); ds.push(d); } if (ds.length >= n - 1) break; }
+    const options = shuffle([correct, ...ds]);
+    return { options, answer: options.indexOf(correct) };
+  }
+  function ordered(correct, options) { // keep a fixed option order (e.g., A / B / Tie)
+    return { options, answer: options.indexOf(correct) };
+  }
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  function randRanks(k, exclude = []) { const pool = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter(r => !exclude.includes(r)); return sample(pool, k); }
+
+  // Build 5 cards of a given category, using only cards available in deck (then removes them)
+  function makeHand(cat, deck) {
+    const avail = new Set(deck.cards);
+    for (let tries = 0; tries < 500; tries++) {
+      let cs = [];
+      const rs = () => randInt(4);
+      if (cat === CAT.STRAIGHT_FLUSH || cat === CAT.STRAIGHT) {
+        const hi = 5 + randInt(10); const ranks = hi === 5 ? [14, 2, 3, 4, 5] : [hi, hi - 1, hi - 2, hi - 3, hi - 4];
+        const s = rs(); cs = ranks.map(r => card(r, cat === CAT.STRAIGHT_FLUSH ? s : rs()));
+      } else if (cat === CAT.QUADS) { const [r, k] = randRanks(2); cs = [0, 1, 2, 3].map(s => card(r, s)).concat([card(k, rs())]); }
+      else if (cat === CAT.FULL_HOUSE) { const [a, b] = randRanks(2); const s3 = sample([0, 1, 2, 3], 3), s2 = sample([0, 1, 2, 3], 2); cs = s3.map(s => card(a, s)).concat(s2.map(s => card(b, s))); }
+      else if (cat === CAT.FLUSH) { const s = rs(); cs = randRanks(5).map(r => card(r, s)); }
+      else if (cat === CAT.TRIPS) { const [a, b, c] = randRanks(3); cs = sample([0, 1, 2, 3], 3).map(s => card(a, s)).concat([card(b, rs()), card(c, rs())]); }
+      else if (cat === CAT.TWO_PAIR) { const [a, b, c] = randRanks(3); cs = sample([0, 1, 2, 3], 2).map(s => card(a, s)).concat(sample([0, 1, 2, 3], 2).map(s => card(b, s)), [card(c, rs())]); }
+      else if (cat === CAT.PAIR) { const [a, ...o] = randRanks(4); cs = sample([0, 1, 2, 3], 2).map(s => card(a, s)).concat(o.map(r => card(r, rs()))); }
+      else { cs = randRanks(5).map(r => card(r, rs())); }
+      if (new Set(cs).size !== 5 || !cs.every(c => avail.has(c))) continue;
+      if (E.catOf(E.eval5(cs)) !== cat) continue;
+      deck.remove(cs); return shuffle(cs);
+    }
+    throw new Error('makeHand failed ' + cat);
+  }
+
+  // A tempting wrong description using ranks that appear in the hand
+  function fakeDescs(cs, correct) {
+    const rs = [...new Set(cs.map(rankOf))].sort((a, b) => b - a);
+    const r = () => pick(rs); const out = new Set();
+    const t = [
+      () => `Pair of ${RANK_PLURAL[r()]}`, () => { const [a, b] = sample(rs, 2); return a && b ? `Two pair, ${RANK_PLURAL[Math.max(a, b)]} and ${RANK_PLURAL[Math.min(a, b)]}` : 'Two pair'; },
+      () => `Three of a kind, ${RANK_PLURAL[r()]}`, () => `${RANK_NAME[r()]} high`, () => `Straight, ${RANK_NAME[r()]} high`,
+      () => `Flush, ${RANK_NAME[r()]} high`, () => { const [a, b] = sample(rs, 2); return a && b ? `Full house, ${RANK_PLURAL[a]} full of ${RANK_PLURAL[b]}` : 'Full house'; },
+    ];
+    for (let i = 0; i < 60 && out.size < 6; i++) { const d = pick(t)(); if (d !== correct) out.add(d); }
+    return [...out];
+  }
+
+  // 7-card scenario whose best hand is a chosen category
+  function sevenWith(cat) {
+    for (let t = 0; t < 200; t++) {
+      const deck = new Deck(); const five = makeHand(cat, deck); const two = deck.deal(2);
+      const all = shuffle(five.concat(two));
+      const b = E.best(all); if (b.cat !== cat) continue;
+      return { hole: all.slice(0, 2), board: all.slice(2), best: b, deck };
+    }
+    throw new Error('sevenWith failed');
+  }
+  const weightedCat = diff => pick(diff === 1 ? [1, 1, 2, 2, 3, 4, 5, 6] : diff === 2 ? [1, 2, 2, 3, 4, 4, 5, 5, 6, 6, 7] : [0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8]);
+
+  // A real draw scenario: outs to reach target (or better) where your hole cards always matter
+  function sampleDraw(boardLen, targets, minOuts = 2, maxOuts = 16) {
+    for (let t = 0; t < 4000; t++) {
+      const deck = new Deck(); const hole = deck.deal(2), board = deck.deal(boardLen);
+      const cur = E.best(hole.concat(board)).cat;
+      const target = pick(targets); if (cur >= target) continue;
+      const outs = E.outs(hole, board, target);
+      if (outs.length < minOuts || outs.length > maxOuts) continue;
+      if (!outs.some(c => E.best(hole.concat(board, [c])).cat === target)) continue; // target must be genuinely reachable
+      if (boardLen === 4 && !outs.every(c => E.bestScore(hole.concat(board, [c])) > E.eval5(board.concat([c])))) continue;
+      return { hole, board, target, outs, cur };
+    }
+    return null;
+  }
+  const TARGET_WORD = { [CAT.TRIPS]: 'three of a kind', [CAT.STRAIGHT]: 'a straight', [CAT.FLUSH]: 'a flush', [CAT.FULL_HOUSE]: 'a full house' };
+  function outsBreakdown(hole, board, outs) {
+    const byDesc = {};
+    for (const c of outs) { const d = E.CAT_NAME[E.best(hole.concat(board, [c])).cat]; (byDesc[d] = byDesc[d] || []).push(c); }
+    return Object.entries(byDesc).map(([d, cs]) => `<div class="obd"><b>${d}</b> (${cs.length}): ${mini(cs)}</div>`).join('');
+  }
+  const stageName = n => n === 3 ? 'flop' : n === 4 ? 'turn' : 'river';
+
+  // Static question banks: [prompt, correct, [distractors], why]
+  const BANK = {
+    'ranks:facts': [
+      ['How many cards are in a standard deck?', '52', ['48', '54', '56'], 'A standard deck has 13 ranks × 4 suits = 52 cards (no jokers in poker).'],
+      ['How many cards of each rank are there (for example, how many Kings)?', '4', ['2', '3', '13'], 'Each rank comes in all four suits: ♠ ♥ ♦ ♣. So there are exactly four Kings.'],
+      ['How many cards are in each suit?', '13', ['4', '12', '14'], 'Each suit runs 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K, A: thirteen cards.'],
+      ['In Texas Hold’em, does the suit make one card rank higher than another?', 'No, all suits are equal', ['Yes, spades are highest', 'Yes, hearts are highest', 'Only when hands tie'], 'Suits never break ties in Texas Hold’em. They matter only for making flushes.'],
+      ['Which list is in the correct order from low to high?', '10, J, Q, K, A', ['J, Q, K, 10, A', '10, Q, J, K, A', 'A, 10, J, Q, K'], 'After 10 come the face cards Jack, Queen, King, and then the Ace on top.'],
+    ],
+    'community:rules': [
+      ['In Texas Hold’em, how many private (hole) cards does each player get?', '2', ['1', '3', '5'], 'Each player is dealt two face-down hole cards that only they can see.'],
+      ['How many community cards are dealt in total?', '5', ['3', '4', '7'], 'Three on the flop, one on the turn, one on the river: five shared cards.'],
+      ['Who can use the community cards?', 'Every player still in the hand', ['Only the dealer', 'Only the player with the best hole cards', 'Nobody, they are just for show'], 'The board is shared. Everyone combines it with their own two hole cards.'],
+      ['How many of your hole cards must you use in your final hand?', 'Any number: 0, 1 or 2', ['Exactly 2', 'At least 1', 'Exactly 1'], 'In Texas Hold’em you use whichever five of your seven cards are best. That can be both hole cards, one, or none.'],
+      ['If the best five cards available are all on the board, what happens?', 'You “play the board” and can at best tie', ['You automatically win', 'You must use a hole card anyway', 'The hand is dealt again'], 'Everyone can use the board, so if nobody beats it, the pot is split.'],
+      ['How many cards make up your final poker hand?', '5', ['7', '2', '6'], 'You have seven cards available, but a poker hand is always exactly five.'],
+    ],
+    'community:order': [
+      ['In what order are the community cards revealed?', 'Flop (3), then turn (1), then river (1)', ['Turn (1), flop (3), river (1)', 'All 5 at once', 'River (1), flop (3), turn (1)'], 'Flop first (three cards together), then the turn, then the river.'],
+      ['What is the “turn”?', 'The 4th community card', ['The first three community cards', 'The 5th community card', 'Your two hole cards'], 'The turn is the single card dealt after the flop.'],
+      ['After the flop, how many community cards are still to come?', '2', ['1', '3', '0'], 'Five in total; three are out after the flop, so the turn and river remain.'],
+      ['What is the “river”?', 'The 5th and final community card', ['The 4th community card', 'The first three community cards', 'The last player to act'], 'The river completes the board; no more cards come after it.'],
+    ],
+    'counting:combos': [
+      ['How many different two-card starting hands can be dealt from a 52-card deck?', '1,326', ['2,652', '169', '2,704'], 'C(52,2) = 52 × 51 ÷ 2 = 1,326. Divide by 2 because A♠K♥ and K♥A♠ are the same hand.'],
+      ['How many different five-card hands can be made from a 52-card deck?', '2,598,960', ['311,875,200', '1,326', '52,000'], 'C(52,5) = 2,598,960. Order doesn’t matter, so we count combinations, not arrangements.'],
+      ['Why do we divide by 2 when counting two-card hands (52 × 51 ÷ 2)?', 'The order of the two cards doesn’t matter', ['Half the cards are red', 'Each player gets half the deck', 'To account for the dealer'], 'Picking A♠ then K♥ gives the same hand as K♥ then A♠, so each hand was counted twice.'],
+    ],
+    'likely:concept': [
+      ['Your hand wins 80% of the time from here. Is it guaranteed to win?', 'No, it loses about 1 time in 5', ['Yes, 80% means it will win', 'Yes, anything over 50% is guaranteed', 'Only if you are first to act'], 'A probability describes long-run frequency. 80% still fails 20% of the time: often enough that you will see it regularly.'],
+      ['Something has a 25% chance. If you try 4 times, are you guaranteed to succeed at least once?', 'No, about 68% chance', ['Yes, 4 × 25% = 100%', 'Yes, by the law of averages', 'No, it stays exactly 25%'], 'Chances don’t add like that. Chance of missing all four is 0.75⁴ ≈ 32%, so at least one hit ≈ 68%.'],
+      ['From a full deck, which is more likely: drawing a heart, or drawing a card that is not a heart?', 'Not a heart (75%)', ['A heart (25%)', 'Equally likely', 'Depends on the shuffle'], '13 hearts vs 39 other cards: a non-heart is three times as likely.'],
+      ['You missed your draw three hands in a row. Is it more likely to come in next time?', 'No, each deal is independent', ['Yes, it is “due”', 'Yes, by about 10%', 'No, it is now less likely'], 'A freshly shuffled deck has no memory. Believing a result is “due” is called the gambler’s fallacy.'],
+    ],
+    'decisions:concept': [
+      ['You made the choice with the better chances (65%) and lost. What is the best conclusion?', 'The decision was still good; results vary', ['The decision was wrong because you lost', 'You should do the opposite next time', '65% must have been miscalculated'], 'Judge decisions by the information you had, not by one outcome. A 65% choice loses 35% of the time.'],
+      ['You can’t see your opponent’s cards. What is the most useful way to think about them?', 'As a range of possible hands, some more likely than others', ['Assume the worst possible hand for you', 'Assume they are bluffing', 'Guess one exact hand and commit to it'], 'With incomplete information, reason about the whole set of hands they could reasonably hold.'],
+      ['Which new information reduces your uncertainty the most?', 'A card that rules out many hands your opponent could hold', ['A card that doesn’t connect with anything', 'The colour of the table', 'How fast the cards were dealt'], 'Information is valuable when it changes which outcomes are possible.'],
+      ['What does “positive expected value” mean for a choice?', 'Repeated many times, it gains on average', ['It always wins', 'It wins more than half the time', 'It has no risk'], 'Expected value is the average result over many repeats. A choice can lose most of the time and still gain on average.'],
+    ],
+  };
+  function fromBank(key, topic, variant, diff) {
+    const [prompt, correct, ds, why] = pick(BANK[key]);
+    return { topic, variant, diff, prompt, groups: [], type: 'mc', ...mc(correct, ds), answerText: correct, why };
+  }
+
+  // ---------- topic definitions ----------
+  const T = {};
+  function topic(id, def) { T[id] = Object.assign({ id }, def); }
+
+  // ===== LEVEL 1 =====
+  topic('ranks', {
+    name: 'Card ranks and suits', level: 1, variants: ['higher', 'facts', 'straightcheck'],
+    coach: {
+      mistakes: ['Thinking a suit (like spades) beats another suit: in Texas Hold’em suits are all equal.', 'Treating the Ace as only high: it can also be the low card in A-2-3-4-5.', 'Wrapping a straight around the Ace (Q-K-A-2-3 is not a straight).'],
+      principles: ['Rank order: 2 is lowest, Ace is highest. Suits never rank.', 'The Ace plays high or low, but never in the middle of a straight.'],
+      followUps: [['If you hold the A♣ and your opponent holds the A♥, whose Ace is higher?', 'Neither. They are equal; suits don’t rank.'], ['Is K-A-2-3-4 a straight?', 'No. A straight can’t wrap around the Ace.'], ['How many Queens are in the deck?', 'Four, one per suit.']],
+    },
+    gen(diff, variant) {
+      if (variant === 'facts') return fromBank('ranks:facts', 'ranks', variant, diff);
+      if (variant === 'straightcheck') {
+        const valid = Math.random() < 0.5; let ranks;
+        if (valid) { const hi = pick(diff === 1 ? [6, 9, 12, 14] : [5, 5, 6, 10, 14]); ranks = hi === 5 ? [14, 2, 3, 4, 5] : [hi, hi - 1, hi - 2, hi - 3, hi - 4]; }
+        else ranks = pick([[12, 13, 14, 2, 3], [13, 14, 2, 3, 4], [11, 12, 13, 14, 2], [9, 10, 11, 13, 14], [3, 4, 5, 6, 8]]);
+        let cs; do { cs = ranks.map(r => card(r, randInt(4))); } while (cs.every(c => suitOf(c) === suitOf(cs[0])) || new Set(cs).size < 5);
+        const isS = E.catOf(E.eval5(cs)) === CAT.STRAIGHT;
+        const why = isS ? (ranks.includes(14) && ranks.includes(2) ? 'Yes. A-2-3-4-5 is the lowest straight (the “wheel”); the Ace plays low here.' : 'Yes. Five ranks in an unbroken sequence make a straight; suits don’t matter.')
+          : (ranks.includes(14) && ranks.includes(2) ? 'No. The sequence wraps around the Ace (…K-A-2…). The Ace can be high or low, but not both at once.' : 'No. There is a gap in the sequence, so these five ranks are not consecutive.');
+        return { topic: 'ranks', variant, diff, prompt: 'Is this five-card hand a straight?', groups: [{ label: 'Hand', cards: shuffle(cs) }], type: 'mc', ...ordered(isS ? 'Yes' : 'No', ['Yes', 'No']), answerText: isS ? 'Yes' : 'No', why };
+      }
+      const deck = new Deck(); let a, b;
+      if (diff >= 2 && Math.random() < 0.3) { const r = 2 + randInt(13); const [s1, s2] = sample([0, 1, 2, 3], 2); a = card(r, s1); b = card(r, s2); }
+      else { do { [a, b] = deck.deal(2); } while (rankOf(a) === rankOf(b)); }
+      const ra = rankOf(a), rb = rankOf(b);
+      const opts = [`The ${E.label(a)}`, `The ${E.label(b)}`, 'Neither, they are the same rank'];
+      const correct = ra > rb ? opts[0] : rb > ra ? opts[1] : opts[2];
+      const why = ra === rb ? `Both are ${RANK_PLURAL[ra]}. Suits don’t rank in Texas Hold’em, so these cards are equal.` : `${RANK_NAME[Math.max(ra, rb)]} outranks ${RANK_NAME[Math.min(ra, rb)]}. The order is 2 (low) → 10 → J → Q → K → A (high). Suit makes no difference.`;
+      return { topic: 'ranks', variant: 'higher', diff, prompt: 'Which card has the higher rank?', groups: [{ label: '', cards: [a, b] }], type: 'mc', ...ordered(correct, opts), answerText: correct, why };
+    },
+  });
+
+  const FREQ = [1302540, 1098240, 123552, 54912, 10200, 5108, 3744, 624, 40];
+  topic('handnames', {
+    name: 'Naming poker hands', level: 1, variants: ['low', 'mid', 'high'],
+    coach: {
+      mistakes: ['Calling five cards of the same colour a flush. A flush needs five cards of the same suit, not just the same colour.', 'Missing a straight because the cards aren’t shown in order: sort them in your head first.', 'Calling a full house “two pair”: a full house is three of one rank plus two of another.'],
+      principles: ['Count ranks first (pairs, trips, quads), then check suits (flush), then check sequences (straight).', 'Rarer hands rank higher. That is why a flush beats a straight.'],
+      followUps: [['What is the difference between two pair and a full house?', 'Two pair is 2+2+1; a full house is 3+2.'], ['Can a hand be both a straight and a flush?', 'Yes. That’s a straight flush, the second-best hand type. A royal flush is the Ace-high version.'], ['Three of a kind plus a pair: what is it called?', 'A full house.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const cat = variant === 'low' ? pick([0, 1, 2, 3]) : variant === 'mid' ? pick([4, 5, 6]) : pick([7, 8, 8]);
+      const deck = new Deck(); const cs = makeHand(cat, deck); const s = E.eval5(cs);
+      if (diff >= 3) {
+        const correct = E.describe(s);
+        return { topic: 'handnames', variant, diff, prompt: 'Describe this hand exactly.', groups: [{ label: 'Hand', cards: cs }], type: 'mc', ...mc(correct, fakeDescs(cs, correct)), answerText: correct, why: `This is <b>${E.describeFull(s)}</b>. ${explainCat(cs, s)}` };
+      }
+      const near = [cat - 2, cat - 1, cat + 1, cat + 2].filter(c => c >= 0 && c <= 8);
+      const ds = diff === 1 ? sample([0, 1, 2, 3, 4, 5, 6, 7, 8].filter(c => c !== cat), 3) : near;
+      const correct = cat === 8 && E.tbOf(s)[0] === 14 ? 'Straight flush (royal flush)' : CAT_NAME[cat];
+      return { topic: 'handnames', variant, diff, prompt: 'What type of hand is this?', groups: [{ label: 'Hand', cards: cs }], type: 'mc', ...mc(correct, ds.map(c => CAT_NAME[c])), answerText: correct, why: `This is <b>${E.describe(s)}</b>. ${explainCat(cs, s)}` };
+    },
+  });
+  function explainCat(cs, s) {
+    const cat = E.catOf(s); const sorted = cs.slice().sort((a, b) => rankOf(b) - rankOf(a));
+    const m = {
+      0: 'No pair, no five of one suit, no five-card sequence, so the highest card names the hand.',
+      1: 'Exactly two cards share a rank; the other three are kickers.',
+      2: 'Two different pairs plus one kicker.',
+      3: 'Three cards share one rank, and the other two don’t pair.',
+      4: 'Five ranks in sequence, but not all one suit.',
+      5: 'All five cards are the same suit, but not in sequence.',
+      6: 'Three of one rank plus a pair of another rank.',
+      7: 'All four cards of one rank.',
+      8: 'Five cards in sequence and all the same suit.',
+    };
+    return m[cat] + ` Sorted: ${mini(sorted)}`;
+  }
+
+  topic('handorder', {
+    name: 'Hand rankings', level: 1, variants: ['far', 'near'],
+    coach: {
+      mistakes: ['Thinking a straight beats a flush. It doesn’t: flushes are rarer.', 'Thinking two pair beats three of a kind.', 'Assuming “more cards involved” always ranks higher.'],
+      principles: ['From top: straight flush, four of a kind, full house, flush, straight, three of a kind, two pair, pair, high card.', 'The ranking follows rarity: the less often a hand appears, the higher it ranks.'],
+      followUps: [['Which is rarer in a random five-card deal, a flush or a straight?', 'A flush (5,108 ways) is rarer than a straight (10,200 ways), so it ranks higher.'], ['Does a full house beat a flush?', 'Yes.'], ['Which ranks higher: three of a kind or two pair?', 'Three of a kind.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      let a, b; do { a = randInt(9); b = randInt(9); } while (a === b || (variant === 'far' ? Math.abs(a - b) < 3 : Math.abs(a - b) > 2));
+      const why = `<b>${CAT_NAME[Math.max(a, b)]}</b> ranks higher. Out of all 2,598,960 possible five-card hands there are ${FREQ[Math.max(a, b)].toLocaleString()} ${CAT_NAME[Math.max(a, b)].toLowerCase()} hands vs ${FREQ[Math.min(a, b)].toLocaleString()} ${CAT_NAME[Math.min(a, b)].toLowerCase()} hands. Rarer ranks higher.`;
+      if (diff === 1) {
+        const opts = [CAT_NAME[a], CAT_NAME[b]]; const correct = CAT_NAME[Math.max(a, b)];
+        return { topic: 'handorder', variant, diff, prompt: `Which hand type ranks higher: <b>${CAT_NAME[a]}</b> or <b>${CAT_NAME[b]}</b>?`, groups: [], type: 'mc', ...ordered(correct, opts), answerText: correct, why };
+      }
+      const deck = new Deck(); const ha = makeHand(a, deck), hb = makeHand(b, deck);
+      const opts = ['Hand A', 'Hand B']; const correct = a > b ? 'Hand A' : 'Hand B';
+      return { topic: 'handorder', variant, diff, prompt: 'Which hand ranks higher?', groups: [{ label: 'Hand A', cards: ha }, { label: 'Hand B', cards: hb }], type: 'mc', ...ordered(correct, opts), answerText: `${correct} (${CAT_NAME[Math.max(a, b)]})`, why: `Hand A is ${E.describe(E.eval5(ha))}; Hand B is ${E.describe(E.eval5(hb))}. ` + why };
+    },
+  });
+
+  // Build B from A’s ranks for kicker/tie exercises
+  function kickerPair(deck) {
+    for (let t = 0; t < 400; t++) {
+      const cat = pick([CAT.HIGH, CAT.PAIR, CAT.PAIR, CAT.TWO_PAIR, CAT.TRIPS, CAT.FLUSH]);
+      const d = new Deck(); const A = makeHand(cat, d); const sa = E.eval5(A);
+      const tie = Math.random() < 0.35;
+      let ranks = A.map(rankOf);
+      if (!tie) {
+        const singles = ranks.filter(r => ranks.filter(x => x === r).length === 1).sort((a, b) => b - a);
+        const cands = (cat === CAT.HIGH || cat === CAT.FLUSH) ? singles.slice(1) : singles;
+        const kick = pick(cands);
+        const newR = pick([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].filter(r => !ranks.includes(r)));
+        ranks = ranks.slice(); ranks[ranks.indexOf(kick)] = newR;
+      }
+      const avail = new Set(d.cards); let B;
+      if (cat === CAT.FLUSH) { const s = pick([0, 1, 2, 3].filter(x => x !== suitOf(A[0]))); B = ranks.map(r => card(r, s)); }
+      else { B = []; const used = new Set(); for (const r of ranks) { const opts = [0, 1, 2, 3].map(s => card(r, s)).filter(c => avail.has(c) && !used.has(c)); if (!opts.length) { B = null; break; } const c = pick(opts); used.add(c); B.push(c); } }
+      if (!B || !B.every(c => avail.has(c))) continue;
+      const sb = E.eval5(B); if (E.catOf(sb) !== cat) continue;
+      const tA = E.tbOf(sa), tBb = E.tbOf(sb);
+      const prim = { 0: 1, 1: 1, 2: 2, 3: 1, 5: 1 }[cat];
+      if (tA.slice(0, prim).join() !== tBb.slice(0, prim).join()) continue;
+      if (!tie && sa === sb) continue;
+      return { A, B: shuffle(B), sa, sb, cat };
+    }
+    throw new Error('kickerPair failed');
+  }
+  function compareWhy(sa, sb, labels = ['Hand A', 'Hand B']) {
+    const ca = E.catOf(sa), cb = E.catOf(sb);
+    let w = `${labels[0]}: <b>${E.describeFull(sa)}</b>. ${labels[1]}: <b>${E.describeFull(sb)}</b>. `;
+    if (ca !== cb) return w + `${CAT_NAME[Math.max(ca, cb)]} beats ${CAT_NAME[Math.min(ca, cb)].toLowerCase()}, so the hand type decides it.`;
+    if (sa === sb) return w + 'Same hand type and every one of the five ranks matches, so it is an exact tie. Suits never break ties.';
+    const ta = E.tbOf(sa), tb = E.tbOf(sb); let i = 0; while (ta[i] === tb[i]) i++;
+    const pos = i === 0 ? 'the main ranks' : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i]} tie-break card (kicker)`;
+    return w + `Same hand type, so compare in order. The first difference is at ${pos}: ${RANK_NAME[Math.max(ta[i], tb[i])]} beats ${RANK_NAME[Math.min(ta[i], tb[i])]}.`;
+  }
+  topic('compare', {
+    name: 'Comparing two hands', level: 1, variants: ['category', 'samecat'],
+    coach: {
+      mistakes: ['Comparing the highest single card before comparing hand types.', 'With the same hand type, forgetting to compare the pair or trips rank before the kickers.'],
+      principles: ['First compare hand type. Only if it’s the same, compare ranks: the main cards first, then kickers.'],
+      followUps: [['Pair of Kings vs pair of Queens with an Ace kicker: who wins?', 'Pair of Kings. The pair rank is compared before kickers.'], ['Two straights: 9-high vs 6-high. Who wins?', 'The 9-high straight.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const deck = new Deck(); const ca = diff === 1 ? randInt(9) : pick([0, 1, 1, 2, 2, 3, 4, 5, 6]);
+      let A = makeHand(ca, deck), B;
+      if (variant === 'category') { let cb; do { cb = randInt(9); } while (cb === ca); B = makeHand(cb, deck); }
+      else { let tries = 0; do { const d2 = new Deck(A); B = makeHand(ca, d2); tries++; } while (E.tbOf(E.eval5(A))[0] === E.tbOf(E.eval5(B))[0] && tries < 50); }
+      const sa = E.eval5(A), sb = E.eval5(B);
+      const opts = ['Hand A wins', 'Hand B wins', 'Tie']; const correct = sa > sb ? opts[0] : sb > sa ? opts[1] : opts[2];
+      return { topic: 'compare', variant, diff, prompt: 'Which hand wins?', groups: [{ label: 'Hand A', cards: A }, { label: 'Hand B', cards: B }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: compareWhy(sa, sb) };
+    },
+  });
+
+  topic('kickers', {
+    name: 'Ties and kickers', level: 1, variants: ['kicker', 'tie'],
+    coach: {
+      mistakes: ['Calling a tie when the kickers differ. All five cards count.', 'Using suits to break a tie. Suits never break ties.', 'Comparing kickers before the pair itself.'],
+      principles: ['Every hand is exactly five cards. When the main ranks match, compare the remaining cards from highest down.', 'Identical five ranks means an exact tie (a split), whatever the suits.'],
+      followUps: [['A♠A♥ K Q 3 vs A♦A♣ K Q 2: who wins?', 'The first hand. The final kicker 3 beats 2.'], ['Two flushes with identical ranks in different suits: who wins?', 'Neither. It’s a tie.']],
+    },
+    gen(diff, variant) {
+      const { A, B, sa, sb } = kickerPair();
+      const opts = ['Hand A wins', 'Hand B wins', 'Tie']; const correct = sa > sb ? opts[0] : sb > sa ? opts[1] : opts[2];
+      return { topic: 'kickers', variant: sa === sb ? 'tie' : 'kicker', diff, prompt: 'Same hand type. Which hand wins?', groups: [{ label: 'Hand A', cards: A }, { label: 'Hand B', cards: B }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: compareWhy(sa, sb) };
+    },
+  });
+
+  // ===== LEVEL 2 =====
+  topic('community', {
+    name: 'Hole cards and the board', level: 2, variants: ['rules', 'order', 'stage'],
+    coach: {
+      mistakes: ['Thinking you must use both hole cards. You can use two, one or none.', 'Forgetting that the board is shared: a pair on the board belongs to everyone.', 'Mixing up the turn (4th card) and the river (5th card).'],
+      principles: ['Your hand = the best five of seven cards: your two hole cards plus five community cards.', 'Order of reveal: flop (3), turn (1), river (1).'],
+      followUps: [['How many unknown community cards remain after the turn?', 'One: the river.'], ['If the board is a royal flush, who wins?', 'Everyone still in the hand ties.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'rules') return fromBank('community:rules', 'community', variant, diff);
+      if (variant === 'order') return fromBank('community:order', 'community', variant, diff);
+      const n = pick([3, 4, 5]); const board = new Deck().deal(n);
+      const opts = ['Flop', 'Turn', 'River']; const correct = opts[n - 3];
+      return { topic: 'community', variant, diff, prompt: 'This is the board so far. Which stage of the hand have we reached?', groups: [{ label: 'Board', cards: board }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: `${n} community cards are showing. Flop = first 3 cards, turn = 4th card, river = 5th card. ${n < 5 ? `${5 - n} card${n === 4 ? '' : 's'} still to come.` : 'No more cards to come.'}` };
+    },
+  });
+
+  topic('best5', {
+    name: 'Finding your best five cards', level: 2, variants: ['name', 'pick'],
+    coach: {
+      mistakes: ['Counting six or seven cards: only five count.', 'Assuming you must use both hole cards.', 'Missing a flush or straight that uses board cards.'],
+      principles: ['Check from the top down: straight flush? Four of a kind? Full house? Flush? Straight? Stop at the first one you can make.', 'Combine your two cards with the board, then pick the best five.'],
+      followUps: [['If your best five are all board cards, what does that mean?', 'You are “playing the board”. Anyone else can use it too.'], ['You have a flush and a straight available. Which do you use?', 'The flush. It ranks higher.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const { hole, board, best } = sevenWith(weightedCat(diff));
+      const desc = E.describe(best.score);
+      const used = best.cards.filter(c => hole.includes(c)).length;
+      const why = `Best five: ${mini(best.cards.slice().sort((a, b) => rankOf(b) - rankOf(a)))} = <b>${E.describeFull(best.score)}</b>. This uses ${used === 0 ? 'none of your hole cards (you play the board)' : used === 1 ? 'one of your hole cards' : 'both of your hole cards'}.`;
+      const groups = [{ label: 'Your cards', cards: hole, pickable: variant === 'pick' }, { label: 'Board', cards: board, pickable: variant === 'pick' }];
+      if (variant === 'pick') {
+        return { topic: 'best5', variant, diff, prompt: 'Tap the <b>five cards</b> that make your best hand.', groups, type: 'pick', pickCount: 5, check: sel => sel.length === 5 && E.eval5(sel) === best.score, answerText: desc, bestCards: best.cards, why };
+      }
+      const boardOnly = E.describe(E.best(board).score);
+      return { topic: 'best5', variant, diff, prompt: 'What is your best five-card hand?', groups, type: 'mc', ...mc(desc, [boardOnly, ...fakeDescs(hole.concat(board), desc)].filter(x => x !== desc)), answerText: desc, why };
+    },
+  });
+
+  topic('showdown', {
+    name: 'Who wins at showdown', level: 2, variants: ['clear', 'kicker', 'split'],
+    coach: {
+      mistakes: ['Forgetting both players share the same five board cards.', 'Calling a split when one player’s hole card plays as a kicker.', 'Thinking a higher hole card wins even when it isn’t among the best five.'],
+      principles: ['Build each player’s best five separately, then compare like any two hands.', 'A hole card only matters if it makes it into that player’s best five.'],
+      followUps: [['Board A-A-K-K-Q. You hold J-2; opponent holds 3-4. Who wins?', 'Tie. Both play A-A-K-K-Q from the board.'], ['Can the player with the better hole cards lose?', 'Yes. What matters is the final five-card hand.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(diff === 1 ? ['clear', 'clear', 'kicker'] : this.variants);
+      let res;
+      for (let t = 0; t < 2500; t++) {
+        const deck = new Deck(); const p1 = deck.deal(2), p2 = deck.deal(2), board = deck.deal(5);
+        const s1 = E.bestScore(p1.concat(board)), s2 = E.bestScore(p2.concat(board));
+        const kind = s1 === s2 ? 'split' : (E.catOf(s1) === E.catOf(s2) && E.tbOf(s1)[0] === E.tbOf(s2)[0]) ? 'kicker' : 'clear';
+        res = { p1, p2, board, s1, s2, kind }; if (kind === variant) break;
+      }
+      const { p1, p2, board, s1, s2, kind } = res;
+      const opts = ['Player 1 wins', 'Player 2 wins', 'Split pot (tie)']; const correct = s1 > s2 ? opts[0] : s2 > s1 ? opts[1] : opts[2];
+      return { topic: 'showdown', variant: kind, diff, prompt: 'All cards are shown. Who wins?', groups: [{ label: 'Player 1', cards: p1 }, { label: 'Player 2', cards: p2 }, { label: 'Board', cards: board }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: compareWhy(s1, s2, ['Player 1', 'Player 2']) + ` <br>Best fives: P1 ${mini(E.best(p1.concat(board)).cards)} · P2 ${mini(E.best(p2.concat(board)).cards)}` };
+    },
+  });
+
+  topic('readmistakes', {
+    name: 'Spotting common reading mistakes', level: 2, variants: ['flush4', 'straight4', 'boardpair', 'true'],
+    coach: {
+      mistakes: ['Seeing four cards of one suit and calling it a flush: you need five.', 'Seeing four in a row and calling it a straight: you need five.', 'Ignoring a pair on the board: it counts for you too.'],
+      principles: ['Always count to five. Four-card flushes and straights are “draws”, not made hands.', 'Read your hand as all seven cards together, not hole cards on their own.'],
+      followUps: [['You have 4 hearts among your 7 cards. Do you have a flush?', 'No. That’s a flush draw; you need a fifth heart.'], ['The board has a pair of 8s and you hold A-K. What’s your hand?', 'At least a pair of 8s with A-K kickers.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      let s;
+      for (let t = 0; t < 5000; t++) {
+        const deck = new Deck(); const hole = deck.deal(2), board = deck.deal(5); const all = hole.concat(board);
+        const b = E.best(all); const sc = [0, 0, 0, 0]; all.forEach(c => sc[suitOf(c)]++);
+        const rset = new Set(all.map(rankOf)); if (rset.has(14)) rset.add(1);
+        let four = false; for (let lo = 1; lo <= 10; lo++) { let k = 0; for (let r = lo; r < lo + 5; r++) if (rset.has(r)) k++; if (k === 4) four = true; }
+        const boardPair = E.best(board).cat === CAT.PAIR && b.cat === CAT.PAIR && !hole.some(h => board.some(x => rankOf(x) === rankOf(h))) && rankOf(hole[0]) !== rankOf(hole[1]);
+        if (variant === 'flush4' && Math.max(...sc) === 4 && b.cat < CAT.STRAIGHT) { s = { hole, board, b, claim: 'I have a flush.' }; break; }
+        if (variant === 'straight4' && four && b.cat < CAT.STRAIGHT) { s = { hole, board, b, claim: 'I have a straight.' }; break; }
+        if (variant === 'boardpair' && boardPair) { s = { hole, board, b, claim: `I have nothing, just ${RANK_NAME[Math.max(...hole.map(rankOf))]} high.` }; break; }
+        if (variant === 'true' && b.cat >= 1) { s = { hole, board, b, claim: `I have ${E.describe(b.score).replace(/^Pair/, 'a pair').replace(/^(Two|Three|Four)/, m => m.toLowerCase()).replace(/^(Straight|Flush|Full)/, m => 'a ' + m.toLowerCase())}.`, truth: true }; break; }
+      }
+      const actual = E.describe(s.b.score);
+      const yes = 'Yes, that’s right'; const no = `No, it’s ${actual}`;
+      const fakes = fakeDescs(s.hole.concat(s.board), actual).map(f => `No, it’s ${f}`);
+      const correct = s.truth ? yes : no;
+      const why = s.truth ? `Correct read: best five ${mini(s.b.cards)} = <b>${actual}</b>.` :
+        variant === 'flush4' ? `Only four cards share a suit. A flush needs five. Real hand: <b>${actual}</b>.` :
+          variant === 'straight4' ? `There are four ranks in sequence, but the fifth is missing. Real hand: <b>${actual}</b>.` :
+            `The pair on the board belongs to every player, including you. Real hand: <b>${E.describeFull(s.b.score)}</b>.`;
+      return { topic: 'readmistakes', variant, diff, prompt: `The player says: <i>“${s.claim}”</i> Is that correct?`, groups: [{ label: 'Their cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...mc(correct, s.truth ? fakes.slice(0, 2) : [yes, ...fakes.slice(0, 1)], 3), answerText: correct, why };
+    },
+  });
+
+  // ===== LEVEL 3 =====
+  topic('counting', {
+    name: 'Counting cards and combinations', level: 3, variants: ['seen', 'unseen', 'combos'],
+    coach: {
+      mistakes: ['Subtracting your opponent’s cards from the unseen count. You haven’t seen them, so they still count as unknown.', 'Forgetting to remove cards you can see when counting what is left.', 'Counting ordered pairs (52 × 51) instead of combinations (÷ 2).'],
+      principles: ['“Unseen” means every card you have not seen: 52 minus your cards minus the board.', 'Combinations ignore order: C(n,2) = n × (n−1) ÷ 2.'],
+      followUps: [['On the turn, how many cards are unseen from your point of view?', '46 (52 − 2 hole − 4 board).'], ['How many ways can two cards be chosen from four Aces?', 'C(4,2) = 6.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'combos') {
+        if (diff === 1 || Math.random() < 0.35) return fromBank('counting:combos', 'counting', variant, diff);
+        const r = 2 + randInt(13); const seen = diff >= 3 ? 1 + randInt(2) : randInt(2);
+        const left = 4 - seen; const ans = E.nCr(left, 2);
+        const shown = sample([0, 1, 2, 3], seen).map(s => card(r, s));
+        const prompt = seen ? `You can see ${seen === 1 ? 'this card' : 'these cards'}. How many different pairs of ${RANK_PLURAL[r]} could someone else hold?` : `How many different two-card combinations make a pair of ${RANK_PLURAL[r]}?`;
+        return { topic: 'counting', variant, diff, prompt, groups: seen ? [{ label: 'Visible', cards: shown }] : [], type: 'mc', ...mc(String(ans), ['6', '3', '1', '4', '12', '16', '0'].filter(x => x !== String(ans))), answerText: String(ans), why: `${left} ${RANK_PLURAL[r]} remain unseen. Pairs = C(${left},2) = ${left} × ${left - 1} ÷ 2 = <b>${ans}</b>.` };
+      }
+      const n = pick([3, 4]); const deck = new Deck(); const hole = deck.deal(2), board = deck.deal(n); const vis = hole.concat(board);
+      if (variant === 'unseen') {
+        const ans = 52 - vis.length; const opp = diff >= 2 ? ' Your opponent also holds two cards you can’t see.' : '';
+        return { topic: 'counting', variant, diff, prompt: `It’s the ${stageName(n)}. From <b>your</b> point of view, how many cards are unseen?${opp}`, groups: [{ label: 'Your cards', cards: hole }, { label: 'Board', cards: board }], type: 'mc', ...mc(String(ans), [String(52 - n), String(ans - 2), String(ans + 1), String(ans - 1)]), answerText: String(ans), why: `52 − ${hole.length} (your cards) − ${n} (board) = <b>${ans}</b>. Your opponent’s cards are unknown to you, so they stay in the unseen pool.` };
+      }
+      const bySuit = Math.random() < 0.5;
+      if (bySuit) {
+        const s = pick([0, 1, 2, 3]); const k = vis.filter(c => suitOf(c) === s).length; const ans = 13 - k;
+        return { topic: 'counting', variant, diff, prompt: `How many <b>${SUIT_NAME[s]}</b> (${SUIT_CH[s]}) have you not seen yet?`, groups: [{ label: 'Your cards', cards: hole }, { label: 'Board', cards: board }], type: 'mc', ...mc(String(ans), ['13', String(ans + 1), String(ans - 1), String(ans + 2)].filter(x => +x >= 0)), answerText: String(ans), why: `Each suit has 13 cards. You can see ${k} ${SUIT_NAME[s]}, so 13 − ${k} = <b>${ans}</b> remain unseen.` };
+      }
+      const r = pick(vis.map(rankOf)); const k = vis.filter(c => rankOf(c) === r).length; const ans = 4 - k;
+      return { topic: 'counting', variant, diff, prompt: `How many <b>${RANK_PLURAL[r]}</b> have you not seen yet?`, groups: [{ label: 'Your cards', cards: hole }, { label: 'Board', cards: board }], type: 'mc', ...mc(String(ans), ['4', '3', '2', '1', '0'].filter(x => x !== String(ans))), answerText: String(ans), why: `There are four ${RANK_PLURAL[r]}. You can see ${k}, so <b>${ans}</b> remain.` };
+    },
+  });
+
+  topic('outs', {
+    name: 'Counting outs', level: 3, variants: ['flush', 'straight', 'fullhouse', 'trips'],
+    coach: {
+      mistakes: ['Counting all 13 cards of a suit for a flush draw instead of subtracting the ones you can see.', 'Counting an out twice (for example, a card that completes both a straight and a flush).', 'Counting cards that improve the board for everyone, not just you.'],
+      principles: ['An out is an unseen card that improves you to the hand you want.', 'Flush draw = 9 outs (13 − 4 seen). Open-ended straight draw = 8. Gutshot = 4.'],
+      followUps: [['You have four cards to a flush. How many outs?', '9. There are 13 of the suit and you can see 4.'], ['An open-ended straight draw (e.g. 8-9-10-J): how many outs?', '8: four 7s and four Queens.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const tgt = { flush: CAT.FLUSH, straight: CAT.STRAIGHT, fullhouse: CAT.FULL_HOUSE, trips: CAT.TRIPS }[variant];
+      const n = diff === 1 ? 3 : pick([3, 4]);
+      const s = sampleDraw(n, [tgt], 2, diff === 1 ? 9 : 16) || sampleDraw(3, [CAT.FLUSH]);
+      const o = s.outs.length; const tw = TARGET_WORD[s.target];
+      const ds = [o - 2, o - 1, o + 1, o + 2, s.target === CAT.FLUSH ? 13 : o * 2].filter(x => x > 0 && x !== o).map(String);
+      return { topic: 'outs', variant, diff, prompt: `It’s the ${stageName(n)}. How many outs do you have to make <b>${tw} or better</b>?`, groups: [{ label: 'Your cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...mc(String(o), ds), answerText: String(o), outsCards: s.outs, why: `You currently have ${E.describe(E.bestScore(s.hole.concat(s.board)))}. Checking every one of the ${52 - 2 - n} unseen cards, exactly <b>${o}</b> give you ${tw} or better:${outsBreakdown(s.hole, s.board, s.outs)}` };
+    },
+  });
+
+  topic('drawprob', {
+    name: 'Probability of the next card', level: 3, variants: ['one', 'two'],
+    coach: {
+      mistakes: ['Dividing by 52 instead of the number of unseen cards.', 'Doubling the one-card chance for two cards. That overestimates, because you could hit on both.', 'Treating a likely outcome as certain.'],
+      principles: ['One card to come: P(hit) = outs ÷ unseen cards.', 'Two cards to come: P(hit) = 1 − P(miss both). Rule of thumb: outs × 4 ≈ % (flop), outs × 2 ≈ % (turn).'],
+      followUps: [['With 8 outs on the turn, about what is your chance on the river?', '8 ÷ 46 ≈ 17.4% (rule of 2 says ≈16%).'], ['Why is “miss both” easier to calculate than “hit at least once”?', 'Missing both is a single path, while hitting at least once has several overlapping cases.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const n = variant === 'one' ? 4 : 3; const unseen = 52 - 2 - n;
+      const s = sampleDraw(n, [CAT.FLUSH, CAT.STRAIGHT, CAT.FULL_HOUSE, CAT.TRIPS], 2, 15); const o = s.outs.length;
+      const tw = TARGET_WORD[s.target];
+      const tell = diff <= 2 ? ` You have <b>${o} outs</b>.` : ' (Count your outs first.)';
+      if (variant === 'one') {
+        const p = o / unseen;
+        const ds = [pct(o / 52), pct(o / 47), pct(o * 0.04), pct(Math.min(0.99, p * 2))];
+        return { topic: 'drawprob', variant, diff, prompt: `It’s the turn. What is the chance the river gives you <b>${tw} or better</b>?${tell}`, groups: [{ label: 'Your cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...mc(pct(p), ds), answerText: pct(p), outsCards: s.outs, why: `${o} outs among ${unseen} unseen cards: ${o} ÷ ${unseen} = <b>${pct(p)}</b>. (Rule of 2 estimate: ${o} × 2 = ${o * 2}%.) Outs: ${mini(s.outs)}` };
+      }
+      const p = E.hitProb(o, unseen, 2);
+      const ds = [pct(o / unseen), pct(Math.min(0.99, 2 * o / unseen + 0.04)), pct(o * 2 / 52), pct(Math.max(0.01, p - 0.08))];
+      return { topic: 'drawprob', variant, diff, prompt: `It’s the flop, with turn and river to come. What is the chance of making <b>${tw} or better</b> by the river?${tell}`, groups: [{ label: 'Your cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...mc(pct(p), ds), answerText: pct(p), outsCards: s.outs, why: `Chance of missing both cards = (${unseen - o}/${unseen}) × (${unseen - o - 1}/${unseen - 1}) = ${pct(1 - p)}. So P(hit) = 1 − ${pct(1 - p)} = <b>${pct(p)}</b>. The rule of 4 estimate is ${o} × 4 = ${o * 4}%. Outs: ${mini(s.outs)}` };
+    },
+  });
+
+  topic('likely', {
+    name: 'Likely vs guaranteed', level: 3, variants: ['concept', 'morelikely'],
+    coach: {
+      mistakes: ['Treating a 70–80% favourite as a sure thing.', 'Believing a missed result is “due” next time (gambler’s fallacy).', 'Thinking a draw is likely just because there are two cards to come.'],
+      principles: ['Probability tells you how often, not what will happen this time.', 'Most single draws are under 50% even with two cards to come. Only big combination draws (about 13+ outs) are favourites.'],
+      followUps: [['With 9 outs on the flop, is making your flush by the river more likely than not?', 'No, about 35%.'], ['If something happens 90% of the time, how often does it fail in 100 tries on average?', 'About 10 times.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'concept') return fromBank('likely:concept', 'likely', variant, diff);
+      const s = sampleDraw(3, [CAT.FLUSH, CAT.STRAIGHT, CAT.FULL_HOUSE, CAT.TRIPS], 4, 16);
+      const o = s.outs.length; const p = E.hitProb(o, 47, 2); const tw = TARGET_WORD[s.target];
+      const opts = ['More likely to hit', 'More likely to miss', 'Guaranteed to hit'];
+      const correct = p > 0.5 ? opts[0] : opts[1];
+      return { topic: 'likely', variant, diff, prompt: `With turn and river to come, are you more likely to make <b>${tw} or better</b> or to miss? (You have ${o} outs.)`, groups: [{ label: 'Your cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...ordered(correct, opts), answerText: `${correct} (${pct(p)})`, outsCards: s.outs, why: `Exact chance of hitting = <b>${pct(p)}</b>, missing = ${pct(1 - p)}. ${p > 0.5 ? 'You’re a favourite, but nowhere near guaranteed.' : 'Even with two cards to come, missing is more likely.'} Outs: ${mini(s.outs)}` };
+    },
+  });
+
+  // ===== LEVEL 4 =====
+  topic('potodds', {
+    name: 'Pot odds with points', level: 4, variants: ['required', 'decide'],
+    coach: {
+      mistakes: ['Comparing the cost with the pot before your call is added. Your own call is part of what you win back.', 'Ignoring pot odds and continuing with any draw.', 'Folding a draw that is clearly worth continuing because it “probably misses”.'],
+      principles: ['Break-even chance = cost to continue ÷ (pot + cost to continue).', 'If your chance of winning is above the break-even chance, continuing gains points on average.'],
+      followUps: [['The pot is 90 points, and continuing costs 10. What is the break-even chance?', '10 ÷ 100 = 10%.'], ['Your chance is 20% and the break-even is 25%. What is the better long-run choice?', 'Fold. You’d lose points on average by continuing.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'required') {
+        const pot = 10 * (4 + randInt(26)); const cost = 10 * (1 + randInt(Math.max(1, Math.floor(pot / 20))));
+        const req = cost / (pot + cost);
+        const ds = [pct(cost / pot, 0), pct(pot / (pot + cost), 0), pct(cost / (pot + 2 * cost), 0), pct(Math.min(0.95, req + 0.1), 0)];
+        return { topic: 'potodds', variant, diff, prompt: `Simulation: the pot holds <b>${pot} points</b> (including your opponent’s latest bet). Continuing costs you <b>${cost} points</b>. What chance of winning do you need to break even in the long run?`, groups: [], type: 'mc', ...mc(pct(req, 0), ds), answerText: pct(req, 0), why: `If you continue, you risk ${cost} to win a final pot of ${pot + cost}. Break-even = ${cost} ÷ (${pot} + ${cost}) = <b>${pct(req)}</b>. Win more often than that and continuing gains points on average.` };
+      }
+      for (let t = 0; t < 200; t++) {
+        const s = sampleDraw(4, [CAT.FLUSH, CAT.STRAIGHT, CAT.FULL_HOUSE], 4, 15); if (!s) continue;
+        const o = s.outs.length; const eq = o / 46;
+        const pot = 10 * (5 + randInt(20)); const cost = 10 * (1 + randInt(Math.max(1, Math.floor(pot / 15))));
+        const req = cost / (pot + cost); if (Math.abs(eq - req) < 0.025) continue;
+        const opts = ['Continue', 'Fold']; const correct = eq > req ? 'Continue' : 'Fold';
+        return { topic: 'potodds', variant, diff, prompt: `Simulation, turn: pot <b>${pot}</b> points, cost to continue <b>${cost}</b>. Assume you win only if you make <b>${TARGET_WORD[s.target]} or better</b> on the river. Which choice is better over many repeats?${diff <= 2 ? ` (${o} outs)` : ''}`, groups: [{ label: 'Your cards', cards: s.hole }, { label: 'Board', cards: s.board }], type: 'mc', ...ordered(correct, opts), answerText: correct, outsCards: s.outs, why: `Your chance: ${o} ÷ 46 = <b>${pct(eq)}</b>. Break-even: ${cost} ÷ (${pot} + ${cost}) = <b>${pct(req)}</b>. ${eq > req ? 'Your chance is higher, so continuing gains points on average, even though you will usually miss.' : 'Your chance is lower, so continuing loses points on average.'} Average result of continuing: ${pct(eq)} × ${pot} − ${pct(1 - eq)} × ${cost} = ${(eq * pot - (1 - eq) * cost).toFixed(1)} points.` };
+      }
+    },
+  });
+
+  const BUCKETS = [[0, 0.25, 'Under 25%'], [0.25, 0.45, '25–45%'], [0.45, 0.55, '45–55%'], [0.55, 0.75, '55–75%'], [0.75, 1.01, 'Over 75%']];
+  topic('equity', {
+    name: 'Winning chances (equity)', level: 4, variants: ['flop', 'turn'],
+    coach: {
+      mistakes: ['Thinking the player ahead now is certain to win.', 'Underestimating a strong draw: many outs can make the trailing hand close to even.', 'Forgetting that ties count as half a win.'],
+      principles: ['Equity = your share of all possible remaining runouts.', 'A made hand vs a draw: count the draw’s outs to estimate how often it catches up.'],
+      followUps: [['On the turn, hand A has 9 outs against hand B. Roughly what are A’s chances?', 'About 9 ÷ 44 ≈ 20% (with both hands known, 44 cards are unseen).'], ['Why can’t you calculate this exactly in a real game?', 'You don’t see your opponent’s cards, so you must think in ranges.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants); const n = variant === 'flop' ? 3 : 4;
+      let deck, h, v, board, eq;
+      for (let t = 0; t < 30; t++) { deck = new Deck(); h = deck.deal(2); v = deck.deal(2); board = deck.deal(n); eq = E.equity(h, v, board); if (eq.eq > 0.03 && eq.eq < 0.97 && (diff > 1 || Math.abs(eq.eq - 0.5) > 0.15)) break; }
+      const hd = E.describe(E.bestScore(h.concat(board))), vd = E.describe(E.bestScore(v.concat(board)));
+      const detail = `Of all ${eq.total.toLocaleString()} possible ${n === 3 ? 'turn-and-river' : 'river'} runouts, you win ${eq.win}, tie ${eq.tie} and lose ${eq.lose}, so your equity is <b>${pct(eq.eq)}</b>. Right now you have ${hd}; your opponent has ${vd}.`;
+      if (diff === 1) {
+        const opts = ['You', 'Your opponent', 'About even (45–55%)'];
+        const correct = eq.eq > 0.55 ? opts[0] : eq.eq < 0.45 ? opts[1] : opts[2];
+        return { topic: 'equity', variant, diff, prompt: `It’s the ${stageName(n)}, and both hands are face up. Who is the favourite to win?`, groups: [{ label: 'You', cards: h }, { label: 'Opponent', cards: v }, { label: 'Board', cards: board }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: detail };
+      }
+      const correct = BUCKETS.find(b => eq.eq >= b[0] && eq.eq < b[1])[2];
+      return { topic: 'equity', variant, diff, prompt: `It’s the ${stageName(n)}, and both hands are face up. Your chance of winning is closest to:`, groups: [{ label: 'You', cards: h }, { label: 'Opponent', cards: v }, { label: 'Board', cards: board }], type: 'mc', ...ordered(correct, BUCKETS.map(b => b[2])), answerText: correct, why: detail };
+    },
+  });
+
+  topic('decisions', {
+    name: 'Decisions under uncertainty', level: 4, variants: ['concept', 'ev'],
+    coach: {
+      mistakes: ['Judging a decision only by whether it won this time (“resulting”).', 'Choosing the option that wins most often instead of the one with the best average result.', 'Assuming hidden information is the worst case.'],
+      principles: ['Good decisions maximise the average result given what you know.', 'Expected value = Σ (probability × result).'],
+      followUps: [['A choice wins 30% for +100 and loses 70% for −30. Is it positive on average?', 'Yes: 0.3 × 100 − 0.7 × 30 = +9.'], ['Can a good decision lose?', 'Yes, often. Judge the process.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'concept') return fromBank('decisions:concept', 'decisions', variant, diff);
+      let p, g, l, ev;
+      do { p = (2 + randInt(15)) * 0.05; g = 10 * (2 + randInt(20)); l = 10 * (1 + randInt(10)); ev = p * g - (1 - p) * l; } while (Math.abs(ev) < 2);
+      const opts = ['Option A', 'Option B', 'They are equal']; const correct = ev > 0 ? 'Option A' : 'Option B';
+      return { topic: 'decisions', variant, diff, prompt: `Simulation. <b>Option A</b>: ${pct(p, 0)} chance to gain ${g} points, otherwise lose ${l} points. <b>Option B</b>: nothing gained or lost. Which has the better average result over many repeats?`, groups: [], type: 'mc', ...ordered(correct, opts), answerText: correct, why: `Expected value of A = ${pct(p, 0)} × ${g} − ${pct(1 - p, 0)} × ${l} = <b>${ev > 0 ? '+' : ''}${ev.toFixed(1)}</b> points per try. B = 0. ${ev > 0 && p < 0.5 ? 'A loses more often than it wins, but still comes out ahead on average.' : ev < 0 && p > 0.5 ? 'A wins more often than not, but the losses are big enough to make it worse on average.' : ''}` };
+    },
+  });
+
+  // ===== LEVEL 5 =====
+  function texture(board) {
+    const sc = [0, 0, 0, 0]; board.forEach(c => sc[suitOf(c)]++); const notes = [];
+    const paired = new Set(board.map(rankOf)).size < board.length;
+    notes.push(Math.max(...sc) >= 3 ? `Three or more ${SUIT_NAME[sc.indexOf(Math.max(...sc))]} on the board, so a flush is possible.` : 'No suit appears three times, so no flush is possible.');
+    notes.push(paired ? 'The board is paired, so full houses and four of a kind are possible.' : 'The board is unpaired, so no full house or four of a kind is possible.');
+    return notes.join(' ');
+  }
+  topic('nuts', {
+    name: 'The nuts and board texture', level: 5, variants: ['category', 'exact'],
+    coach: {
+      mistakes: ['Forgetting that an unpaired board makes full houses impossible.', 'Missing a possible straight that needs two specific hole cards.', 'Assuming your own strong hand is the nuts without checking the board.'],
+      principles: ['Check the board top-down: straight flush possible? Paired (full house/quads)? 3+ of a suit (flush)? Three cards within a five-rank window (straight)?', 'The nuts can only use two hole cards plus three or more board cards.'],
+      followUps: [['On an unpaired board with no three of one suit, what is the best category possible?', 'A straight if three board cards fit within a five-rank window; otherwise three of a kind.'], ['On a paired board, what new hand types become possible?', 'Full house and four of a kind.']],
+    },
+    gen(diff, variant) {
+      variant = variant || (diff >= 2 ? pick(this.variants) : 'category');
+      let board, list; do { board = new Deck().deal(5); list = E.nutsList(board); } while (list.length < 4);
+      const top = list[0]; const why = `${texture(board)} The best possible hand is <b>${top.desc}</b>, for example holding ${mini(top.example)}.`;
+      if (variant === 'category') {
+        const c = E.catOf(top.score); const correct = CAT_NAME[c];
+        return { topic: 'nuts', variant, diff, prompt: 'Looking only at this river board, what is the best <b>type</b> of hand anyone could hold (the nuts)?', groups: [{ label: 'Board', cards: board }], type: 'mc', ...mc(correct, [c - 1, c + 1, c + 2, c - 2].filter(x => x >= 0 && x <= 8).map(x => CAT_NAME[x])), answerText: correct, why };
+      }
+      const ds = list.slice(1, 5).map(x => x.desc);
+      return { topic: 'nuts', variant, diff, prompt: 'Looking only at this river board, what exactly is the nuts?', groups: [{ label: 'Board', cards: board }], type: 'mc', ...mc(top.desc, ds), answerText: top.desc, why: why + ` The next-best hands are ${ds.slice(0, 2).join(' and ')}.` };
+    },
+  });
+
+  topic('ranges', {
+    name: 'Combinations and ranges', level: 5, variants: ['pairs', 'unpaired', 'removal'],
+    coach: {
+      mistakes: ['Treating every starting hand as equally likely. Unpaired hands have 16 combinations, pairs only 6.', 'Forgetting card removal: cards you can see reduce the opponent’s combinations.', 'Mixing up suited (4) and offsuit (12) counts.'],
+      principles: ['Pair: C(4,2) = 6 combos. Unpaired: 4 × 4 = 16 (4 suited + 12 offsuit).', 'Visible cards remove combinations: multiply the remaining counts.'],
+      followUps: [['You hold an Ace. How many A-K combos can your opponent have?', '3 Aces × 4 Kings = 12.'], ['How many suited A-K combos exist?', '4, one per suit.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      const [x, y] = randRanks(2).sort((a, b) => b - a);
+      if (variant === 'pairs') { const correct = '6'; return { topic: 'ranges', variant, diff, prompt: `How many combinations of pocket ${RANK_PLURAL[x]} are there (with no cards visible)?`, groups: [], type: 'mc', ...mc(correct, ['4', '12', '16', '3', '8']), answerText: correct, why: 'Choose 2 of the 4 cards of that rank: C(4,2) = <b>6</b>.' }; }
+      if (variant === 'unpaired') {
+        const kind = pick(['any', 'suited', 'offsuit']); const ans = { any: 16, suited: 4, offsuit: 12 }[kind];
+        const label = `${RANK_CH[x]}${RANK_CH[y]}${kind === 'suited' ? ' suited' : kind === 'offsuit' ? ' offsuit' : ' (any suits)'}`;
+        return { topic: 'ranges', variant, diff, prompt: `How many combinations of <b>${label}</b> exist (no cards visible)?`, groups: [], type: 'mc', ...mc(String(ans), ['16', '12', '4', '6', '8', '9'].filter(z => z !== String(ans))), answerText: String(ans), why: `4 ${RANK_PLURAL[x]} × 4 ${RANK_PLURAL[y]} = 16 total: 4 suited (same suit) and 12 offsuit. Answer: <b>${ans}</b>.` };
+      }
+      // removal: count real combos among unseen cards
+      const deck = new Deck(); const hole = deck.deal(2), board = deck.deal(3); const vis = hole.concat(board);
+      const vr = vis.map(rankOf); const a = pick(vr.concat([x])), b0 = pick([y, ...vr].filter(r => r !== a)) || (a === 14 ? 13 : 14);
+      const [hi, lo] = [Math.max(a, b0), Math.min(a, b0)];
+      const un = E.unseenFrom(vis); const nh = un.filter(c => rankOf(c) === hi).length, nl = un.filter(c => rankOf(c) === lo).length; const ans = nh * nl;
+      return { topic: 'ranges', variant, diff, prompt: `Given the cards you can see, how many combinations of <b>${RANK_CH[hi]}${RANK_CH[lo]}</b> (any suits) could your opponent hold?`, groups: [{ label: 'Your cards', cards: hole }, { label: 'Board', cards: board }], type: 'mc', ...mc(String(ans), ['16', String(ans + 3), String(Math.max(0, ans - 3)), '12', '9', '6'].filter(z => z !== String(ans))), answerText: String(ans), why: `Unseen ${RANK_PLURAL[hi]}: ${nh}. Unseen ${RANK_PLURAL[lo]}: ${nl}. Combinations = ${nh} × ${nl} = <b>${ans}</b> (down from 16 with no cards visible). This is card removal.` };
+    },
+  });
+
+  const SHARE = [[0, 0.05, 'Under 5%'], [0.05, 0.15, '5–15%'], [0.15, 0.4, '15–40%'], [0.4, 1.01, 'Over 40%']];
+  topic('vsrange', {
+    name: 'Your hand vs all possible hands', level: 5, variants: ['river', 'turnchange'],
+    coach: {
+      mistakes: ['Judging your hand in isolation rather than against everything the opponent could hold.', 'Thinking a hand that was strong on the flop stays strong after a scary card.', 'Forgetting that a card helping you may help many opponent hands even more.'],
+      principles: ['Strength is relative: count the share of possible opponent hands that beat you.', 'Each new card changes every hand’s strength. Re-evaluate on every street.'],
+      followUps: [['A fourth suited card hits the board. What usually happens to a hand like two pair?', 'It gets relatively weaker: any single card of that suit now makes a flush.'], ['Why count combinations rather than hand types?', 'Some hand types have many more combinations, so they are more likely.']],
+    },
+    gen(diff, variant) {
+      variant = variant || pick(this.variants);
+      if (variant === 'river') {
+        let deck, hero, board, r;
+        for (let t = 0; t < 40; t++) { deck = new Deck(); hero = deck.deal(2); board = deck.deal(5); if (E.best(hero.concat(board)).cat >= 1) break; }
+        const rem = E.unseenFrom(hero.concat(board)); const h = E.bestScore(hero.concat(board)); const beatBy = {}; let beat = 0, total = 0;
+        for (const v of E.combos(rem, 2)) { const s = E.bestScore(v.concat(board)); total++; if (s > h) { beat++; const n = CAT_NAME[E.catOf(s)]; beatBy[n] = (beatBy[n] || 0) + 1; } }
+        const share = beat / total; const correct = SHARE.find(b => share >= b[0] && share < b[1])[2];
+        const bd = Object.entries(beatBy).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}: ${v}`).join(' · ') || 'none';
+        return { topic: 'vsrange', variant, diff, prompt: 'River. Out of every two-card hand your opponent could hold, what share beats you?', groups: [{ label: 'Your cards', cards: hero }, { label: 'Board', cards: board }], type: 'mc', ...ordered(correct, SHARE.map(b => b[2])), answerText: correct, why: `You have <b>${E.describeFull(h)}</b>. Of ${total} possible opponent hands, ${beat} beat you (<b>${pct(share)}</b>). Combinations that beat you, by hand type: ${bd}.` };
+      }
+      const shareAt = (hero, board) => { const rem = E.unseenFrom(hero.concat(board)); const h = E.bestScore(hero.concat(board)); let b = 0, t = 0; for (const v of E.combos(rem, 2)) { t++; if (E.bestScore(v.concat(board)) > h) b++; } return b / t; };
+      let res;
+      for (let t = 0; t < 40; t++) {
+        const deck = new Deck(); const hero = deck.deal(2), flop = deck.deal(3), turn = deck.deal(1);
+        if (E.best(hero.concat(flop)).cat < 1) continue;
+        const a = shareAt(hero, flop), b = shareAt(hero, flop.concat(turn)); res = { hero, flop, turn, a, b };
+        if (Math.abs(b - a) > 0.04) break;
+      }
+      const { hero, flop, turn, a, b } = res; const opts = ['Stronger', 'Weaker', 'About the same'];
+      const correct = Math.abs(b - a) <= 0.03 ? opts[2] : b < a ? opts[0] : opts[1];
+      return { topic: 'vsrange', variant, diff, prompt: `The turn card is the ${E.label(turn[0])}. Compared with the flop, is your hand now relatively stronger or weaker against all possible opponent hands?`, groups: [{ label: 'Your cards', cards: hero }, { label: 'Flop', cards: flop }, { label: 'Turn', cards: turn }], type: 'mc', ...ordered(correct, opts), answerText: correct, why: `On the flop, ${pct(a)} of possible opponent hands beat your ${E.describe(E.bestScore(hero.concat(flop)))}. After the turn, ${pct(b)} beat your ${E.describe(E.bestScore(hero.concat(flop, turn)))}. ${b < a ? 'Fewer hands beat you now.' : b > a ? 'More hands beat you now. The turn helped other hands more than yours.' : ''}` };
+    },
+  });
+
+  // ---------- lessons ----------
+  const LESSONS = [
+    { id: '1.1', level: 1, title: 'The deck', topics: ['ranks'], body: `<p>A standard deck has <b>52 cards</b>: 13 ranks in each of 4 suits.</p>[[2s 7h Td Jc Qs Kh Ad]]<p>Ranks from low to high: 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, Ace. The <b>Ace</b> is the highest card, but it can also play <b>low</b> in one straight: A-2-3-4-5.</p><p>The four suits are spades ♠, hearts ♥, diamonds ♦ and clubs ♣. <b>Suits are all equal</b>. They never make one card beat another; they only matter for flushes.</p>[[As Ah Ad Ac]]<p class="note">Four Aces, one of each suit. None of them outranks another.</p>` },
+    { id: '1.2', level: 1, title: 'The ten hands', topics: ['handnames', 'handorder'], body: `<p>Every poker hand is exactly <b>five cards</b>. From best to worst:</p><ol class="hands"><li><b>Straight flush</b>: five in sequence, same suit. The Ace-high version is a <i>royal flush</i>. [[9h Th Jh Qh Kh]]</li><li><b>Four of a kind</b> [[7s 7h 7d 7c Ks]]</li><li><b>Full house</b>: three of one rank plus two of another. [[Qs Qh Qd 4c 4s]]</li><li><b>Flush</b>: five of one suit, not in sequence. [[2d 6d 9d Jd Kd]]</li><li><b>Straight</b>: five in sequence, mixed suits. [[5c 6h 7s 8d 9c]]</li><li><b>Three of a kind</b> [[8s 8h 8c Kd 3s]]</li><li><b>Two pair</b> [[Js Jd 5h 5c As]]</li><li><b>One pair</b> [[Th Tc As 7d 2h]]</li><li><b>High card</b>: none of the above. [[Ah Jd 8s 5c 3h]]</li></ol><p>Why does a flush beat a straight? <b>Rarity.</b> Of 2,598,960 possible five-card hands, 10,200 are straights but only 5,108 are flushes.</p>` },
+    { id: '1.3', level: 1, title: 'Comparing hands', topics: ['compare'], body: `<p>To compare two hands:</p><p><b>1. Compare the hand type.</b> A higher type always wins. Any flush beats any straight, for example.</p><p><b>2. If the type is the same, compare the main ranks.</b> A pair of Kings beats a pair of Queens. For two pair, compare the higher pair first, then the lower pair. For a full house, compare the three-of-a-kind part first.</p>[[Ks Kd 4h 3c 2s]] [[Qs Qd Ah Jc 9s]]<p class="note">The pair of Kings wins. Kickers only matter when the pairs are equal.</p><p>Straights are compared by their top card; the A-2-3-4-5 straight counts as five-high, the lowest straight.</p>` },
+    { id: '1.4', level: 1, title: 'Kickers and ties', topics: ['kickers'], body: `<p>When two hands share the same type and main ranks, compare the remaining cards, called <b>kickers</b>, from highest down.</p>[[As Ad Kh 9c 4s]] [[Ah Ac Kd 9s 3h]]<p class="note">Both have a pair of Aces, K and 9. The last kicker decides: 4 beats 3.</p><p>If all five ranks match, it is an exact <b>tie</b> and the pot is split. <b>Suits never break ties.</b></p>[[Ks Qs 8d 6c 2h]] [[Kh Qd 8c 6s 2d]]<p class="note">An exact tie: same five ranks.</p>` },
+    { id: '2.1', level: 2, title: 'Hole cards and the board', topics: ['community'], body: `<p>In Texas Hold’em each player gets <b>two private hole cards</b>. Then <b>five community cards</b> (the board) are dealt face up, shared by everyone:</p><p><b>Flop</b>: three cards at once. <b>Turn</b>: the fourth card. <b>River</b>: the fifth card.</p>[[Ah Kh]] <span class="note">your hole cards</span> [[Qh 7c 2h 9s Jd]] <span class="note">the board</span><p>You make the <b>best five-card hand</b> from your seven cards. You may use both hole cards, one, or none.</p>` },
+    { id: '2.2', level: 2, title: 'Best five of seven', topics: ['best5', 'showdown'], body: `<p>With seven cards available, check from the top of the rankings down and stop at the first hand you can make.</p>[[9c 9d]] [[9h Kc Ks 4d 2c]]<p class="note">Three 9s and two Kings make a <b>full house, Nines full of Kings</b>. Your fifth and sixth cards don’t matter.</p><p>At showdown, build each player’s best five, then compare them like any two hands. If both players’ best five are the board, it is a tie: they <b>play the board</b>.</p>` },
+    { id: '2.3', level: 2, title: 'Common reading mistakes', topics: ['readmistakes'], body: `<p>Most beginner errors come from not counting to five:</p><p><b>Four of a suit is not a flush.</b> It’s a flush <i>draw</i>.</p>[[Ah 8h]] [[Kh 2h 9c 5s Td]]<p class="note">Only four hearts. No flush.</p><p><b>Four in a row is not a straight.</b> Watch for gaps, and remember straights can’t wrap around the Ace (Q-K-A-2-3 is not a straight).</p><p><b>A pair on the board counts for everyone</b>, including you.</p>` },
+    { id: '3.1', level: 3, title: 'Counting what’s left', topics: ['counting'], body: `<p>Probability starts with counting. From your point of view, every card you <b>haven’t seen</b> could still come, including your opponent’s hidden cards.</p><p>After the flop you’ve seen 5 cards, so <b>47</b> are unseen. After the turn, <b>46</b>.</p><p>To count groups of cards where order doesn’t matter, use <b>combinations</b>: C(n,2) = n × (n−1) ÷ 2. There are C(52,2) = <b>1,326</b> possible two-card starting hands, and C(4,2) = <b>6</b> ways to hold a pair of any one rank.</p>` },
+    { id: '3.2', level: 3, title: 'Outs', topics: ['outs'], body: `<p>An <b>out</b> is an unseen card that improves you to the hand you want.</p>[[Ah 7h]] [[Kh 2h 9c]]<p class="note">Four hearts are visible, and there are 13 hearts in total, so <b>9 outs</b> make the flush.</p><p>Common counts: flush draw <b>9</b>; open-ended straight draw (e.g. 8-9-10-J) <b>8</b>; inside straight (“gutshot”) <b>4</b>; two pair to a full house <b>4</b>.</p><p>Don’t count a card twice, and be careful with cards that would improve everyone, not just you.</p>` },
+    { id: '3.3', level: 3, title: 'The chance of hitting', topics: ['drawprob'], body: `<p><b>One card to come</b> (turn to river): P = outs ÷ 46. With 9 outs: 9 ÷ 46 ≈ <b>19.6%</b>.</p><p><b>Two cards to come</b> (flop to river): it’s easier to calculate the chance of <i>missing both</i>: (38/47) × (37/46) ≈ 65%, so P(hit) ≈ <b>35%</b>.</p><p>Quick estimates: the <b>rule of 4</b> (flop: outs × 4 ≈ %) and the <b>rule of 2</b> (turn: outs × 2 ≈ %). The app always shows the exact value next to the estimate.</p>` },
+    { id: '3.4', level: 3, title: 'Likely is not guaranteed', topics: ['likely'], body: `<p>An 80% chance means that over many repeats it happens about 8 times in 10. It also means it <b>fails 1 time in 5</b>, which you will see often.</p><p>Each deal is independent: missing three times in a row does not make a hit “due”. Assuming it does is the <b>gambler’s fallacy</b>.</p><p>Even a big flush draw on the flop (9 outs, 35%) is more likely to <b>miss</b> than hit.</p>` },
+    { id: '4.1', level: 4, title: 'Pot odds (with points)', topics: ['potodds'], body: `<p>In this simulator the pot is made of <b>points</b> and has no money value.</p><p>Suppose the pot holds 80 points and continuing costs 20. You risk 20 to win a final pot of 100, so you need to win more than <b>20 ÷ 100 = 20%</b> of the time to come out ahead on average.</p><p><b>Break-even chance = cost ÷ (pot + cost).</b> If your chance of winning is above it, continuing is the better long-run choice, even if you usually lose.</p>` },
+    { id: '4.2', level: 4, title: 'Equity', topics: ['equity'], body: `<p><b>Equity</b> is your share of the outcomes if all remaining cards were dealt. A made hand vs a draw is often closer than it looks.</p><p>The app calculates equity <b>exactly</b>, by dealing out every possible turn and river (990 combinations on the flop) and counting wins, ties and losses.</p>` },
+    { id: '4.3', level: 4, title: 'Deciding with incomplete information', topics: ['decisions'], body: `<p>You never see your opponent’s cards, so good decisions compare <b>average results</b> rather than guarantees.</p><p><b>Expected value</b> = Σ (probability × result). A choice that wins 30% for +100 and loses 70% for −30 averages 0.3 × 100 − 0.7 × 30 = <b>+9</b>.</p><p>Judge the decision, not the single result. Good decisions sometimes lose, and bad ones sometimes win.</p>` },
+    { id: '5.1', level: 5, title: 'The nuts and board texture', topics: ['nuts'], body: `<p>The <b>nuts</b> is the best possible hand on a given board. To find it, read the board’s <b>texture</b>:</p><p><b>Paired board</b>: full house and four of a kind become possible. <b>Three or more of one suit</b>: a flush is possible. <b>Three cards within a five-rank window</b>: a straight is possible.</p>[[Kd Ks 7h 7c 2d]]<p class="note">Paired board, so the nuts is four of a kind: K-K in hand.</p>` },
+    { id: '5.2', level: 5, title: 'Combinations and ranges', topics: ['ranges'], body: `<p>A <b>range</b> is the set of hands someone could hold. Hands aren’t equally likely; count <b>combinations</b>:</p><p>Pair: <b>6</b> combos. Unpaired (e.g. A-K): <b>16</b> combos = 4 suited + 12 offsuit.</p><p><b>Card removal</b>: if you can see an Ace, only 3 Aces are left. A-K then has 3 × 4 = 12 combos.</p>` },
+    { id: '5.3', level: 5, title: 'Your hand vs a range', topics: ['vsrange'], body: `<p>Real strength is <b>relative</b>: what share of possible opponent hands beat you?</p><p>The app counts this exactly by checking every two-card hand your opponent could hold: 990 of them on the river.</p><p>Each new card changes the picture. A card that improves your hand might improve many opponent hands even more.</p>` },
+  ];
+
+  const LEVELS = { 1: 'Foundations', 2: 'Rules and hand analysis', 3: 'Probability', 4: 'Decision-making', 5: 'Advanced card analysis' };
+
+  function generate(topicId, diff = 1, variant) {
+    const t = T[topicId]; if (!t) throw new Error('no topic ' + topicId);
+    const v = variant && t.variants.includes(variant) ? variant : (topicId === 'kickers' ? undefined : pick(t.variants));
+    const q = t.gen(diff, v); q.topic = topicId; return q;
+  }
+
+  return { TOPICS: T, LESSONS, LEVELS, generate, mini, pct };
+})(typeof Engine !== 'undefined' ? Engine : require('./engine.js'));
+if (typeof module !== 'undefined') module.exports = Curriculum;
+
+// ===== App: state, progress, sessions, UI =====
+(() => {
+  const E = Engine, C = Curriculum, T = C.TOPICS;
+  const KEY = 'pokerCoach.v1';
+  let storageOK = true;
+  const fresh = () => ({ v: 1, diag: null, lessons: {}, topics: {}, mistakes: [], review: {}, focus: [], settings: { fourColor: false, difficulty: 'auto', theme: 'system' }, final: { attempts: 0, best: null, passed: false } });
+  function load() { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch (e) { storageOK = false; return null; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; } }
+  let S = Object.assign(fresh(), load() || {}); S.settings = Object.assign(fresh().settings, S.settings || {});
+
+  // ---------- progress model ----------
+  const stat = id => (S.topics[id] = S.topics[id] || { a: 0, c: 0, h: [], vc: {}, dc: { 1: 0, 2: 0, 3: 0 }, diff: 1, streak: 0, miss: 0 });
+  const recentAcc = st => { const r = st.h.slice(-10); return r.length ? r.reduce((x, y) => x + y, 0) / r.length : 0; };
+  const MASTERY = ['Not started', 'Learning', 'Practising', 'Proficient', 'Mastered'];
+  function mastery(id) {
+    const st = stat(id), t = T[id]; if (!st.a) return { lvl: 0, needs: [] };
+    const acc = recentAcc(st), vNeed = Math.min(3, t.variants.length), vHave = t.variants.filter(v => st.vc[v] > 0).length;
+    const hard = (st.dc[2] || 0) + (st.dc[3] || 0);
+    const needs = [
+      [st.a >= 12, `12+ answers (you have ${st.a})`],
+      [acc >= 0.85, `85%+ on your last 10 (you have ${Math.round(acc * 100)}%)`],
+      [vHave >= vNeed, `success on ${vNeed} different question styles (you have ${vHave})`],
+      [hard >= 3, `3+ correct at medium or hard difficulty (you have ${hard})`],
+    ];
+    if (needs.every(n => n[0])) return { lvl: 4, needs: [] };
+    const missing = needs.filter(n => !n[0]).map(n => n[1]);
+    if (st.a >= 8 && acc >= 0.75 && vHave >= Math.min(2, vNeed)) return { lvl: 3, needs: missing };
+    if (st.a >= 4 && acc >= 0.6) return { lvl: 2, needs: missing };
+    return { lvl: 1, needs: missing };
+  }
+  const lessonState = id => S.lessons[id] || {};
+  const lessonDone = id => !!(lessonState(id).done || lessonState(id).out);
+  function lessonAvailable(id) { for (const l of C.LESSONS) { if (l.id === id) return true; if (!lessonDone(l.id)) return false; } return false; }
+  const nextLesson = () => C.LESSONS.find(l => !lessonDone(l.id));
+  const unlockedTopics = () => [...new Set(C.LESSONS.filter(l => lessonDone(l.id)).flatMap(l => l.topics))];
+  const diffFor = id => ({ easy: 1, medium: 2, hard: 3 }[S.settings.difficulty] || stat(id).diff);
+  const DIFF_NAME = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
+
+  function record(q, ok, yourText) {
+    const st = stat(q.topic); st.a++; if (ok) st.c++; st.h.push(ok ? 1 : 0); if (st.h.length > 30) st.h.shift();
+    let note = '';
+    if (ok) { st.vc[q.variant] = (st.vc[q.variant] || 0) + 1; st.dc[q.diff] = (st.dc[q.diff] || 0) + 1; st.miss = 0; st.streak++; if (st.streak >= 3 && st.diff < 3) { st.diff++; st.streak = 0; note = `Three in a row. This skill moves up to ${DIFF_NAME[st.diff]}.`; } }
+    else { st.streak = 0; st.miss++; if (st.miss >= 2 && st.diff > 1) { st.diff--; st.miss = 0; note = `This skill eases back to ${DIFF_NAME[st.diff]} so you can rebuild.`; } }
+    const key = q.topic + '|' + q.variant;
+    if (!ok) {
+      S.mistakes.unshift({ t: Date.now(), topic: q.topic, prompt: q.prompt, groups: q.groups.map(g => ({ label: g.label, cards: g.cards })), your: yourText, answer: q.answerText, why: q.why });
+      if (S.mistakes.length > 50) S.mistakes.length = 50;
+      S.review[key] = { topic: q.topic, variant: q.variant, need: 2 };
+    } else if (S.review[key]) { if (--S.review[key].need <= 0) { delete S.review[key]; note = (note ? note + ' ' : '') + 'Cleared from your review list.'; } }
+    save(); return S.settings.difficulty === 'auto' ? note : note.replace(/This skill (moves|eases).*?\.\s?/, '');
+  }
+
+  // ---------- session builders ----------
+  const DIAG = [['ranks', 1, 'higher'], ['ranks', 2, 'straightcheck'], ['handnames', 1, 'low'], ['handnames', 2, 'mid'], ['handorder', 1, 'near'], ['community', 1, 'rules'], ['community', 1, 'order'], ['best5', 1, 'name'], ['best5', 2, 'name'], ['counting', 1, 'unseen'], ['drawprob', 1, 'one'], ['likely', 1, 'concept']];
+  const AREAS = [['Card ranks and suits', ['ranks']], ['Poker hand rankings', ['handnames', 'handorder']], ['How community cards work', ['community']], ['Finding the best five-card hand', ['best5']], ['Basic probability', ['counting', 'drawprob', 'likely']]];
+  const spec = (topic, diff, variant) => ({ topic, diff: diff || diffFor(topic), variant });
+  function weightedPick(items) { const tot = items.reduce((a, b) => a + b[1], 0); let r = Math.random() * tot; for (const [x, w] of items) { if ((r -= w) <= 0) return x; } return items[items.length - 1][0]; }
+  function smartQueue(n = 10) {
+    const tops = unlockedTopics(); if (!tops.length) return [];
+    const rev = Object.values(S.review).filter(r => tops.includes(r.topic)); const q = []; let last;
+    for (let i = 0; i < n; i++) {
+      if (rev.length && Math.random() < 0.3) { const r = E.pick(rev); q.push(spec(r.topic, null, r.variant)); last = r.topic; continue; }
+      const items = tops.filter(t => t !== last || tops.length === 1).map(t => { const st = stat(t), m = mastery(t).lvl; return [t, 1 + 3 * (st.a ? 1 - recentAcc(st) : 0.5) + (st.a < 5 ? 1.5 : 0) + (S.focus.includes(t) ? 1.5 : 0) + rev.filter(r => r.topic === t).length - (m === 4 ? 0.7 : 0)]; });
+      last = weightedPick(items); q.push(spec(last));
+    }
+    return q;
+  }
+  function cycleVariants(topic, n, diff) { const vs = E.shuffle(T[topic].variants.slice()); return Array.from({ length: n }, (_, i) => spec(topic, diff, vs[i % vs.length])); }
+  function reviewQueue(n = 10) { const items = E.shuffle(Object.values(S.review)); const q = []; for (let i = 0; i < Math.min(n, items.length * 2); i++) { const r = items[i % items.length]; q.push(spec(r.topic, null, r.variant)); } return q; }
+  function lessonQueue(l) { const out = []; for (let i = 0; i < 4; i++) { const t = l.topics[i % l.topics.length]; const vs = T[t].variants; out.push(spec(t, Math.min(2, Math.max(1, stat(t).diff - 1) || 1), vs[Math.floor(i / l.topics.length) % vs.length])); } return E.shuffle(out); }
+  function finalQueue() { const q = []; for (let lv = 1; lv <= 5; lv++) { const tops = E.shuffle(Object.values(T).filter(t => t.level === lv).map(t => t.id)); for (let i = 0; i < 3; i++) q.push(spec(tops[i % tops.length], lv === 1 ? 3 : pick23(), undefined)); } return E.shuffle(q); }
+  const pick23 = () => 2 + E.randInt(2);
+
+  // ---------- routing ----------
+  const app = document.getElementById('app');
+  let route = { name: 'home' }; let sess = null; let openSkill = null;
+  function go(name, params = {}) { route = Object.assign({ name }, params); render(); window.scrollTo(0, 0); }
+  function startSession(mode, queue, extra = {}) {
+    if (!queue.length) { toast(mode === 'review' ? 'Nothing to review yet. Mistakes you make will appear here.' : 'Finish a lesson first to unlock practice.'); return; }
+    sess = Object.assign({ mode, queue, i: 0, results: [], q: null, answered: false, sel: new Set(), note: '' }, extra);
+    loadQuestion(); go('quiz');
+  }
+  function loadQuestion() { const s = sess.queue[sess.i]; sess.q = C.generate(s.topic, s.diff, s.variant); sess.answered = false; sess.sel = new Set(); sess.note = ''; sess.choice = null; }
+  const coached = () => !['diag', 'final'].includes(sess.mode);
+
+  // ---------- rendering helpers ----------
+  const RL = { A: 14, K: 13, Q: 12, J: 11, T: 10 };
+  const parseCard = t => E.card(RL[t[0]] || +t[0], 'shdc'.indexOf(t[1]));
+  function cardHTML(c, cls = '', tag = 'div') {
+    const r = E.rankOf(c), s = E.suitOf(c);
+    return `<${tag} class="card s${s} ${cls}" data-c="${c}" aria-label="${E.RANK_NAME[r]} of ${E.SUIT_NAME[s]}"${tag === 'button' ? ' type="button" aria-pressed="' + cls.includes('sel') + '"' : ''}><span class="ix"><b>${E.RANK_CH[r]}</b><i>${E.SUIT_CH[s]}</i></span><span class="pip" aria-hidden="true">${E.SUIT_CH[s]}</span></${tag}>`;
+  }
+  const row = cs => `<div class="crow">${cs.map(c => cardHTML(c)).join('')}</div>`;
+  const lessonBody = html => html.replace(/\[\[([^\]]+)\]\]/g, (_, s) => row(s.trim().split(/\s+/).map(parseCard)));
+  function table(q, reveal) {
+    if (!q.groups.length) return '';
+    const best = reveal && q.type === 'pick' ? new Set(q.bestCards) : null;
+    return `<div class="felt">${q.groups.map(g => `<div class="grp">${g.label ? `<div class="glabel">${g.label}</div>` : ''}<div class="crow">${g.cards.map((c, k) => {
+      let cls = 'deal'; if (q.type === 'pick') { if (sess.sel.has(c)) cls += ' sel'; if (best) cls += best.has(c) ? ' best' : sess.sel.has(c) ? ' wrong' : ' dim'; }
+      return cardHTML(c, cls, q.type === 'pick' && !reveal ? 'button' : 'div').replace('class="card', `style="--k:${k}" class="card`);
+    }).join('')}</div></div>`).join('')}</div>`;
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  const pctS = x => Math.round(x * 100) + '%';
+  function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3200); }
+  const pill = lvl => `<span class="pill m${lvl}">${MASTERY[lvl]}</span>`;
+
+  const TABS = [['home', '♠', 'Home'], ['learn', '♥', 'Learn'], ['practice', '♦', 'Practice'], ['progress', '♣', 'Progress'], ['settings', '⚙', 'Settings']];
+  function shell(title, body) {
+    return `<header class="top"><h1>${title}</h1></header><main class="main">${body}</main>
+    <nav class="tabs" aria-label="Main">${TABS.map(([id, ic, nm]) => `<button type="button" data-go="${id}" class="${route.name === id ? 'on' : ''}" ${route.name === id ? 'aria-current="page"' : ''}><span class="ti ${id}" aria-hidden="true">${ic}</span><span>${nm}</span></button>`).join('')}</nav>`;
+  }
+
+  // ---------- screens ----------
+  function homeScreen() {
+    const nl = nextLesson(); const rev = Object.keys(S.review).length;
+    const totA = Object.values(S.topics).reduce((a, t) => a + t.a, 0), totC = Object.values(S.topics).reduce((a, t) => a + t.c, 0);
+    const mastered = Object.keys(T).filter(id => mastery(id).lvl === 4).length; const done = C.LESSONS.filter(l => lessonDone(l.id)).length;
+    const hero = `<section class="hero felt"><div class="crow fan">${['Ts', 'Js', 'Qs', 'Ks', 'As'].map((t, k) => cardHTML(parseCard(t), 'deal').replace('class="card', `style="--k:${k}" class="card`)).join('')}</div>
+      <h2>Learn poker the way a mathematician would.</h2><p>Hands, odds and decisions, one step at a time, with every answer explained.</p></section>`;
+    if (!S.diag) return shell('Poker Coach', hero + `<div class="stack"><button class="btn primary" data-act="diag">Take the placement check</button><p class="sub center">12 questions, about 4 minutes. It finds what you already know so you can skip ahead.</p><button class="btn ghost" data-act="skipdiag">Skip and start from Lesson 1.1</button></div><p class="fine">An educational simulator. Points only, no real money, no betting.</p>`);
+    return shell('Poker Coach', hero + `<div class="stack">
+      ${nl ? `<button class="tile" data-lesson="${nl.id}"><span class="tk">Continue learning</span><span class="tt">Lesson ${nl.id}: ${nl.title}</span><span class="ts">Level ${nl.level} · ${C.LEVELS[nl.level]}</span></button>` : `<button class="tile" data-act="final"><span class="tk">All lessons complete</span><span class="tt">Take the final assessment</span><span class="ts">15 fresh questions across all five levels</span></button>`}
+      <button class="tile" data-act="smart" ${unlockedTopics().length ? '' : 'disabled'}><span class="tk">Smart practice</span><span class="tt">10 questions, weighted to your weak spots</span><span class="ts">${unlockedTopics().length ? `${unlockedTopics().length} skills unlocked` : 'Unlocks after your first lesson'}</span></button>
+      ${rev ? `<button class="tile warn" data-act="review"><span class="tk">Review</span><span class="tt">${rev} question style${rev === 1 ? '' : 's'} to revisit</span><span class="ts">Get each right twice to clear it</span></button>` : ''}
+      <div class="stats"><div><b>${done}/${C.LESSONS.length}</b><span>lessons</span></div><div><b>${mastered}/${Object.keys(T).length}</b><span>skills mastered</span></div><div><b>${totA ? pctS(totC / totA) : '–'}</b><span>accuracy</span></div></div>
+    </div>`);
+  }
+
+  function learnScreen() {
+    let html = '';
+    for (let lv = 1; lv <= 5; lv++) {
+      const ls = C.LESSONS.filter(l => l.level === lv);
+      html += `<section class="level"><h2><span class="lvn">${lv}</span>${C.LEVELS[lv]}</h2><div class="list">${ls.map(l => {
+        const st = lessonState(l.id), av = lessonAvailable(l.id);
+        const badge = st.done ? '<span class="pill m4">Done</span>' : st.out ? '<span class="pill m3">Tested out</span>' : av ? '<span class="pill m2">Up next</span>' : '<span class="pill lock">Locked</span>';
+        return `<button class="li" data-lesson="${l.id}" ${av || lessonDone(l.id) ? '' : 'disabled'}><span class="lid">${l.id}</span><span class="lt">${l.title}</span>${badge}</button>`;
+      }).join('')}</div></section>`;
+    }
+    const allDone = C.LESSONS.every(l => lessonDone(l.id));
+    html += `<section class="level"><h2><span class="lvn">★</span>Final assessment</h2><button class="li" data-act="final" ${allDone ? '' : 'disabled'}><span class="lt">${allDone ? `15 fresh questions. Pass with 80% overall and 2 of 3 on every level.${S.final.best != null ? ` Best: ${S.final.best}/15.` : ''}` : 'Unlocks when every lesson is complete.'}</span>${S.final.passed ? '<span class="pill m4">Passed</span>' : ''}</button></section>`;
+    return shell('Learn', html);
+  }
+
+  function lessonScreen() {
+    const l = C.LESSONS.find(x => x.id === route.id); const st = lessonState(l.id);
+    return `<header class="top sub"><button class="back" data-go="learn" aria-label="Back to lessons">‹ Lessons</button></header><main class="main lesson">
+      <p class="kick">Level ${l.level} · ${C.LEVELS[l.level]}</p><h1 class="lh">${l.id} ${l.title}</h1><article class="prose">${lessonBody(l.body)}</article>
+      <div class="stack"><button class="btn primary" data-act="lessoncheck">${st.done ? 'Retake the check' : 'Start the check'}</button><p class="sub center">4 questions. Get 3 right to complete this lesson. Skills are only marked mastered after consistent practice.</p></div></main>`;
+  }
+
+  function practiceScreen() {
+    const tops = unlockedTopics(); const rev = Object.keys(S.review).length;
+    let html = `<div class="stack"><button class="tile" data-act="smart" ${tops.length ? '' : 'disabled'}><span class="tk">Smart practice</span><span class="tt">10 mixed questions</span><span class="ts">More practice on skills you find hard, plus your review items</span></button>
+      <button class="tile ${rev ? 'warn' : ''}" data-act="review" ${rev ? '' : 'disabled'}><span class="tk">Review mistakes</span><span class="tt">${rev ? `${rev} question style${rev === 1 ? '' : 's'} waiting` : 'Nothing to review'}</span><span class="ts">Fresh questions in the same style as ones you missed</span></button></div>`;
+    html += `<h2 class="sec">Practise one skill</h2>`;
+    if (!tops.length) html += `<p class="empty">Skills unlock as you complete lessons. Start with <button class="linkish" data-lesson="${nextLesson().id}">Lesson ${nextLesson().id}</button>.</p>`;
+    else html += `<div class="list">${Object.values(T).filter(t => tops.includes(t.id)).map(t => `<button class="li" data-topic="${t.id}"><span class="lt">${t.name}<small>${DIFF_NAME[diffFor(t.id)]}</small></span>${pill(mastery(t.id).lvl)}</button>`).join('')}</div>`;
+    return shell('Practice', html);
+  }
+
+  function progressScreen() {
+    const done = C.LESSONS.filter(l => lessonDone(l.id)).length;
+    let html = `<div class="stats"><div><b>${done}/${C.LESSONS.length}</b><span>lessons</span></div><div><b>${Object.keys(T).filter(id => mastery(id).lvl === 4).length}</b><span>mastered</span></div><div><b>${S.mistakes.length}</b><span>mistakes logged</span></div></div>`;
+    if (S.diag && S.diag.areas) html += `<details class="card-d"><summary>Placement check results</summary>${S.diag.areas.map(a => `<div class="arow"><span>${a.name}</span><b>${a.c}/${a.n}</b></div>`).join('')}</details>`;
+    for (let lv = 1; lv <= 5; lv++) {
+      html += `<h2 class="sec"><span class="lvn">${lv}</span>${C.LEVELS[lv]}</h2><div class="skills">`;
+      for (const t of Object.values(T).filter(t => t.level === lv)) {
+        const st = stat(t.id), m = mastery(t.id), acc = st.a ? recentAcc(st) : 0;
+        html += `<div class="skill"><button class="sk" data-skill="${t.id}" aria-expanded="${openSkill === t.id}"><span class="lt">${t.name}<small>${st.a ? `${pctS(acc)} recent · ${st.a} answered` : 'Not attempted'}</small></span>${pill(m.lvl)}</button><div class="bar" aria-hidden="true"><i style="width:${m.lvl * 25}%"></i></div>
+          ${openSkill === t.id ? `<div class="skd">${m.lvl === 4 ? '<p>Mastered: consistent success across varied questions and harder difficulties.</p>' : `<p>To reach mastery you need:</p><ul>${(m.needs.length ? m.needs : ['at least one attempt']).map(n => `<li>${n}</li>`).join('')}</ul>`}<p class="sub">Lifetime: ${st.c}/${st.a} correct · current difficulty ${DIFF_NAME[st.diff]}</p>${unlockedTopics().includes(t.id) ? `<button class="btn small" data-topic="${t.id}">Practise this skill</button>` : '<p class="sub">Unlocks with its lesson.</p>'}</div>` : ''}</div>`;
+      }
+      html += `</div>`;
+    }
+    html += `<h2 class="sec">Mistake log</h2>`;
+    html += S.mistakes.length ? S.mistakes.slice(0, 30).map(m => `<details class="card-d mist"><summary><span>${T[m.topic].name}</span><small>${new Date(m.t).toLocaleDateString()}</small></summary><p>${m.prompt}</p>${m.groups.map(g => `<div class="mg">${g.label ? `<small>${g.label}</small> ` : ''}${C.mini(g.cards)}</div>`).join('')}<p><span class="bad">You answered:</span> ${esc(m.your)}<br><span class="good">Correct:</span> ${m.answer}</p><div class="why">${m.why}</div></details>`).join('') : `<p class="empty">No mistakes yet. Wrong answers are saved here with an explanation, and similar questions are queued for review.</p>`;
+    return shell('Progress', html);
+  }
+
+  function settingsScreen() {
+    const seg = (name, val, opts) => `<div class="seg" role="radiogroup">${opts.map(([v, l]) => `<button role="radio" aria-checked="${val === v}" class="${val === v ? 'on' : ''}" data-set="${name}" data-val="${v}">${l}</button>`).join('')}</div>`;
+    return shell('Settings', `<div class="set"><h2>Difficulty</h2>${seg('difficulty', S.settings.difficulty, [['auto', 'Adaptive'], ['easy', 'Easy'], ['medium', 'Medium'], ['hard', 'Hard']])}<p class="sub">Adaptive raises a skill’s difficulty after 3 correct in a row and lowers it after 2 misses.</p></div>
+      <div class="set"><h2>Card colours</h2>${seg('fourColor', String(S.settings.fourColor), [['false', 'Two-colour'], ['true', 'Four-colour']])}<p class="sub">Four-colour makes diamonds blue and clubs green, which helps you spot flushes.</p><div class="crow">${['Ah', 'Kd', 'Qc', 'Js'].map(t => cardHTML(parseCard(t))).join('')}</div></div>
+      <div class="set"><h2>Appearance</h2>${seg('theme', S.settings.theme, [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']])}</div>
+      <div class="set"><h2>Your data</h2><p class="sub">${storageOK ? 'Progress is saved on this device only and isn’t synced. Once added to your Home Screen, the app works offline.' : 'This browser is blocking storage, so progress lasts only until you close the page.'}</p><button class="btn ghost" data-act="diag">Retake the placement check</button><button class="btn danger" data-act="reset">Reset all progress</button></div>
+      <p class="fine">Poker Coach is an educational card-game simulator. It uses points for teaching only, with no real money, deposits, wagering or gambling services. Hand rankings and probabilities are calculated exactly by enumerating cards, not estimated.</p>`);
+  }
+
+  function quizScreen() {
+    const q = sess.q, t = T[q.topic]; const n = sess.queue.length, i = sess.i;
+    let body = `<p class="qmeta"><span>${t.name}</span><span>${DIFF_NAME[q.diff]}</span></p>${table(q, sess.answered)}<div class="prompt">${q.prompt}</div>`;
+    if (q.type === 'mc') {
+      body += `<div class="opts" role="group" aria-label="Answers">${q.options.map((o, k) => {
+        let cls = ''; if (sess.answered) { if (coached()) { if (k === q.answer) cls = 'right'; else if (k === sess.choice) cls = 'wrongo'; else cls = 'fade'; } else cls = k === sess.choice ? 'chosen' : 'fade'; }
+        return `<button class="opt ${cls}" data-opt="${k}" ${sess.answered ? 'disabled' : ''}>${o}</button>`;
+      }).join('')}</div>`;
+    } else if (!sess.answered) body += `<div class="pickbar"><span>${sess.sel.size}/5 selected</span><button class="btn primary small" data-act="checkpick" ${sess.sel.size === 5 ? '' : 'disabled'}>Check</button></div>`;
+    if (sess.answered) body += coached() ? coachPanel() : `<div class="stack"><button class="btn primary" data-act="next">${i + 1 < n ? 'Next question' : 'See results'}</button></div>`;
+    const title = { diag: 'Placement check', lesson: 'Lesson check', final: 'Final assessment', review: 'Review', practice: 'Smart practice', topic: 'Skill practice' }[sess.mode];
+    return `<header class="top sub quizhead"><button class="back" data-act="quit" aria-label="Leave session">✕</button><span class="qt">${title}</span><span class="qn">${i + 1} / ${n}</span></header>
+      <div class="prog" aria-hidden="true"><i style="width:${(i + (sess.answered ? 1 : 0)) / n * 100}%"></i></div><main class="main quiz">${body}</main>`;
+  }
+
+  function coachPanel() {
+    const q = sess.q, t = T[q.topic], ok = sess.lastOk; const fu = E.pick(t.coach.followUps);
+    const canSimilar = ['practice', 'review', 'topic'].includes(sess.mode);
+    return `<section class="coach ${ok ? 'ok' : 'no'}" aria-live="polite">
+      <h2>${ok ? 'Correct' : 'Not quite'}</h2>
+      <p class="ans"><b>Answer:</b> ${q.answerText}</p>
+      <div class="why">${q.why}</div>
+      <div class="cbox"><h3>A common beginner mistake</h3><p>${E.pick(t.coach.mistakes)}</p></div>
+      <div class="cbox"><h3>Remember</h3><p>${E.pick(t.coach.principles)}</p></div>
+      <details class="cbox fu"><summary><span><b>Check yourself:</b> ${fu[0]}</span><span class="reveal">Show answer</span></summary><p>${fu[1]}</p></details>
+      ${sess.note ? `<p class="note">${sess.note}</p>` : ''}
+    </section><div class="stack">${canSimilar ? '<button class="btn ghost" data-act="similar">Try a similar one</button>' : ''}<button class="btn primary" data-act="next">${sess.i + 1 < sess.queue.length ? 'Next question' : 'See results'}</button></div>`;
+  }
+
+  function resultsScreen() {
+    const r = sess.results, c = r.filter(x => x.ok).length, n = r.length; let head = '', extra = '';
+    if (sess.mode === 'diag') {
+      const areas = AREAS.map(([name, tops]) => { const xs = r.filter(x => tops.includes(x.topic)); return { name, c: xs.filter(x => x.ok).length, n: xs.length }; });
+      const [a1, a2, a3, a4, a5] = areas; const out = [];
+      if (a1.c === a1.n) out.push('1.1'); if (a2.c === a2.n) out.push('1.2'); if (a3.c === a3.n) out.push('2.1'); if (a4.c === a4.n) out.push('2.2'); if (a5.c === a5.n) out.push('3.1');
+      out.forEach(id => { S.lessons[id] = Object.assign({}, S.lessons[id], { out: true }); C.LESSONS.find(l => l.id === id).topics.forEach(t => { stat(t).diff = Math.max(stat(t).diff, 2); }); });
+      S.focus = AREAS.filter((a, k) => areas[k].c / areas[k].n < 0.6).flatMap(a => a[1]);
+      S.diag = { t: Date.now(), areas, out }; save();
+      const nl = nextLesson();
+      head = `<h1 class="rh">${c}/${n}</h1><p class="sub center">Placement check complete</p>`;
+      extra = `<div class="card-d">${areas.map(a => `<div class="arow"><span>${a.name}</span><span class="pill ${a.c === a.n ? 'm4' : a.c / a.n >= 0.6 ? 'm2' : 'm1'}">${a.c === a.n ? 'Solid' : a.c / a.n >= 0.6 ? 'Some gaps' : 'Start here'}</span><b>${a.c}/${a.n}</b></div>`).join('')}</div>
+        <div class="prose"><p>${out.length ? `You tested out of lesson${out.length > 1 ? 's' : ''} <b>${out.join(', ')}</b>. You can still open them any time.` : 'We’ll start from the beginning so every idea builds on the last.'} Your path starts at <b>Lesson ${nl.id}: ${nl.title}</b>.</p>${S.focus.length ? `<p>Smart practice will give extra weight to: ${[...new Set(S.focus.map(f => T[f].name))].join(', ')}.</p>` : ''}</div>
+        <div class="stack"><button class="btn primary" data-lesson="${nl.id}">Start Lesson ${nl.id}</button></div>`;
+    } else if (sess.mode === 'lesson') {
+      const pass = c >= 3; const l = C.LESSONS.find(x => x.id === sess.lessonId);
+      if (pass) { S.lessons[l.id] = Object.assign({}, S.lessons[l.id], { done: true, score: c }); save(); }
+      const nl = nextLesson();
+      head = `<h1 class="rh">${c}/${n}</h1><p class="sub center">${pass ? `Lesson ${l.id} complete` : 'Not passed yet. You need 3 of 4.'}</p>`;
+      extra = `<div class="stack">${pass ? (nl ? `<button class="btn primary" data-lesson="${nl.id}">Next: Lesson ${nl.id}, ${nl.title}</button>` : '<button class="btn primary" data-act="final">Take the final assessment</button>') + `<button class="btn ghost" data-topic="${l.topics[0]}">Practise ${T[l.topics[0]].name.toLowerCase()}</button>` : `<button class="btn primary" data-lesson="${l.id}">Reread the lesson</button><button class="btn ghost" data-act="lessoncheck2">Try the check again</button>`}</div>`;
+    } else if (sess.mode === 'final') {
+      const byLv = [1, 2, 3, 4, 5].map(lv => { const xs = r.filter(x => T[x.topic].level === lv); return { lv, c: xs.filter(x => x.ok).length, n: xs.length }; });
+      const pass = c / n >= 0.8 && byLv.every(b => b.c >= 2);
+      S.final.attempts++; S.final.best = Math.max(S.final.best || 0, c); if (pass) S.final.passed = true; save();
+      head = `<h1 class="rh">${c}/${n}</h1><p class="sub center">${pass ? 'Passed. You can read, count and reason through poker hands.' : 'Not passed yet. Review the explanations below, practise your weakest levels and try again with new questions.'}</p>`;
+      extra = `<div class="card-d">${byLv.map(b => `<div class="arow"><span>Level ${b.lv}: ${C.LEVELS[b.lv]}</span><b class="${b.c >= 2 ? 'good' : 'bad'}">${b.c}/${b.n}</b></div>`).join('')}</div>`;
+      extra += r.map((x, k) => `<details class="card-d mist"><summary><span>${k + 1}. ${T[x.topic].name}</span><small class="${x.ok ? 'good' : 'bad'}">${x.ok ? 'Correct' : 'Missed'}</small></summary><p>${x.prompt}</p>${x.groups.map(g => `<div class="mg">${g.label ? `<small>${g.label}</small> ` : ''}${C.mini(g.cards)}</div>`).join('')}<p><span class="${x.ok ? 'good' : 'bad'}">You answered:</span> ${esc(x.your)}<br><span class="good">Correct:</span> ${x.answer}</p><div class="why">${x.why}</div></details>`).join('');
+      extra += `<div class="stack"><button class="btn primary" data-go="home">Done</button></div>`;
+    } else {
+      const byT = {}; r.forEach(x => { byT[x.topic] = byT[x.topic] || [0, 0]; byT[x.topic][1]++; if (x.ok) byT[x.topic][0]++; });
+      head = `<h1 class="rh">${c}/${n}</h1><p class="sub center">Session complete</p>`;
+      extra = `<div class="card-d">${Object.entries(byT).map(([id, [a, b]]) => `<div class="arow"><span>${T[id].name}</span>${pill(mastery(id).lvl)}<b>${a}/${b}</b></div>`).join('')}</div><div class="stack"><button class="btn primary" data-act="again">Practise again</button><button class="btn ghost" data-go="home">Done</button></div>`;
+    }
+    return `<header class="top sub"><button class="back" data-go="home" aria-label="Home">‹ Home</button></header><main class="main results">${head}${extra}</main>`;
+  }
+
+  function render() {
+    document.body.classList.toggle('four', S.settings.fourColor);
+    document.documentElement.toggleAttribute('data-theme', S.settings.theme !== 'system');
+    if (S.settings.theme !== 'system') document.documentElement.setAttribute('data-theme', S.settings.theme);
+    const fn = { home: homeScreen, learn: learnScreen, practice: practiceScreen, progress: progressScreen, settings: settingsScreen, lesson: lessonScreen, quiz: quizScreen, results: resultsScreen }[route.name];
+    app.innerHTML = fn(); app.className = 'r-' + route.name;
+  }
+
+  // ---------- actions ----------
+  function submit(choice) {
+    const q = sess.q; let ok, your;
+    if (q.type === 'mc') { ok = choice === q.answer; your = q.options[choice]; sess.choice = choice; }
+    else { const sel = [...sess.sel]; ok = q.check(sel); your = 'Selected ' + sel.map(E.label).join(' '); }
+    sess.answered = true; sess.lastOk = ok;
+    if (sess.mode !== 'diag') sess.note = record(q, ok, your);
+    sess.results.push({ topic: q.topic, ok, your, prompt: q.prompt, groups: q.groups.map(g => ({ label: g.label, cards: g.cards })), answer: q.answerText, why: q.why });
+    render();
+    const target = document.querySelector('.coach, [data-act="next"]'); if (target) target.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+  app.addEventListener('click', ev => {
+    const b = ev.target.closest('button, [data-c]'); if (!b || b.disabled) return;
+    const d = b.dataset;
+    if (d.go) return go(d.go);
+    if (d.lesson) return go('lesson', { id: d.lesson });
+    if (d.topic) return startSession('topic', cycleVariants(d.topic, 8), { topicId: d.topic });
+    if (d.skill) { openSkill = openSkill === d.skill ? null : d.skill; return render(); }
+    if (d.set) { S.settings[d.set] = d.set === 'fourColor' ? d.val === 'true' : d.val; save(); return render(); }
+    if (d.opt !== undefined && !sess.answered) return submit(+d.opt);
+    if (d.c !== undefined && sess && sess.q && sess.q.type === 'pick' && !sess.answered) { const c = +d.c; if (sess.sel.has(c)) sess.sel.delete(c); else if (sess.sel.size < 5) sess.sel.add(c); return render(); }
+    switch (d.act) {
+      case 'diag': return startSession('diag', DIAG.map(([t, df, v]) => spec(t, df, v)));
+      case 'skipdiag': S.diag = { t: Date.now(), skipped: true }; save(); return go('lesson', { id: '1.1' });
+      case 'smart': return startSession('practice', smartQueue());
+      case 'review': return startSession('review', reviewQueue());
+      case 'final': return startSession('final', finalQueue());
+      case 'lessoncheck': return startSession('lesson', lessonQueue(C.LESSONS.find(l => l.id === route.id)), { lessonId: route.id });
+      case 'lessoncheck2': { const id = sess.lessonId; return startSession('lesson', lessonQueue(C.LESSONS.find(l => l.id === id)), { lessonId: id }); }
+      case 'checkpick': return submit();
+      case 'similar': { const q = sess.q; sess.queue.splice(sess.i + 1, 0, spec(q.topic, null, q.variant)); sess.i++; loadQuestion(); render(); return window.scrollTo(0, 0); }
+      case 'next': if (sess.i + 1 < sess.queue.length) { sess.i++; loadQuestion(); render(); return window.scrollTo(0, 0); } return go('results');
+      case 'quit': if (sess.results.length && !confirm('Leave this session? Answers so far are already saved to your progress.')) return; return go(sess.mode === 'lesson' ? 'learn' : 'home');
+      case 'again': return startSession(sess.mode, sess.mode === 'review' ? reviewQueue() : sess.mode === 'topic' ? cycleVariants(sess.topicId, 8) : smartQueue(), { topicId: sess.topicId });
+      case 'reset': if (confirm('Erase all lessons, skills, mistakes and settings? This can’t be undone.')) { S = fresh(); save(); go('home'); toast('Progress reset.'); } return;
+    }
+  });
+  render();
+})();
+
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
+</script>
+</body>
+</html>
